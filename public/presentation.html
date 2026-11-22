@@ -792,6 +792,91 @@
       display: flex;
     }
 
+    /* True Fullscreen Presentation Mode (Keynote / PowerPoint feel) */
+    body.is-fullscreen {
+      background-color: #051F20;
+      overflow: hidden;
+    }
+
+    body.is-fullscreen .controls-bar,
+    body.is-fullscreen .single-nav {
+      display: none !important;
+    }
+
+    body.is-fullscreen .deck-wrapper {
+      width: 100vw;
+      max-width: none;
+      height: 100vh;
+      padding: 0;
+      gap: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    body.is-fullscreen .slide-frame {
+      display: none;
+      width: min(100vw, calc(100vh * 16 / 9));
+      height: min(100vh, calc(100vw * 9 / 16));
+      aspect-ratio: 16 / 9;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    body.is-fullscreen .slide-frame.is-active {
+      display: block;
+    }
+
+    .fs-hud {
+      position: fixed;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      background: rgba(5, 31, 32, 0.88);
+      border: 1px solid rgba(218, 241, 222, 0.25);
+      backdrop-filter: blur(10px);
+      padding: 8px 14px;
+      border-radius: 999px;
+      color: #FFFFFF;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    body.is-fullscreen .fs-hud {
+      display: flex;
+    }
+
+    body.is-fullscreen.hud-visible .fs-hud,
+    body.is-fullscreen .fs-hud:hover {
+      opacity: 1;
+    }
+
+    .fs-hud button {
+      border: 1px solid rgba(218, 241, 222, 0.3);
+      background: #0B2B26;
+      color: #FFFFFF;
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .fs-hud button:hover {
+      background: #235347;
+    }
+
+    .fs-hud .fs-exit {
+      background: #DAF1DE;
+      color: #051F20;
+      border-color: #DAF1DE;
+    }
+
     /* Print / Export to 16:9 PDF */
     @media print {
       @page {
@@ -840,8 +925,11 @@
       <button id="btnGrid" class="ctrl-btn" onclick="setMode('grid')">
         Все 6 слайдов сеткой
       </button>
-      <button class="ctrl-btn primary" onclick="window.print()">
-        Сохранить в PDF / Печать
+      <button id="btnFullscreen" class="ctrl-btn primary" onclick="enterFullscreen()">
+        На весь экран (F)
+      </button>
+      <button class="ctrl-btn" onclick="window.print()">
+        Сохранить в PDF
       </button>
       <a class="ctrl-btn" href="/">← На сайт школы</a>
     </div>
@@ -1271,20 +1359,32 @@
     </div>
   </div>
 
+  <!-- Auto-Hiding Fullscreen Control HUD -->
+  <div class="fs-hud">
+    <button onclick="prevSlide()">← Назад</button>
+    <span id="fsCounter" class="mono" style="font-size: 12px; padding: 0 6px;">01 / 06</span>
+    <button onclick="nextSlide()">Вперёд →</button>
+    <button class="fs-exit" onclick="exitFullscreen()">Выйти (Esc)</button>
+  </div>
+
   <script>
     const slides = Array.from(document.querySelectorAll('.slide-frame'));
     const counter = document.getElementById('slideCounter');
+    const fsCounter = document.getElementById('fsCounter');
     const btnSingle = document.getElementById('btnSingle');
     const btnGrid = document.getElementById('btnGrid');
     let current = 0;
+    let hudTimer = null;
 
     function updateSlide(index) {
       current = (index + slides.length) % slides.length;
       slides.forEach((el, i) => el.classList.toggle('is-active', i === current));
-      counter.textContent =
+      const label =
         String(current + 1).padStart(2, '0') +
         ' / ' +
         String(slides.length).padStart(2, '0');
+      counter.textContent = label;
+      fsCounter.textContent = label;
     }
 
     function nextSlide() {
@@ -1301,6 +1401,42 @@
       btnSingle.classList.toggle('active', mode === 'single');
       btnGrid.classList.toggle('active', mode === 'grid');
     }
+
+    function showHudTemporarily() {
+      if (!document.body.classList.contains('is-fullscreen')) return;
+      document.body.classList.add('hud-visible');
+      clearTimeout(hudTimer);
+      hudTimer = setTimeout(() => {
+        document.body.classList.remove('hud-visible');
+      }, 2200);
+    }
+
+    function enterFullscreen() {
+      setMode('single');
+      document.body.classList.add('is-fullscreen');
+      showHudTemporarily();
+      const el = document.documentElement;
+      if (el.requestFullscreen) {
+        el.requestFullscreen().catch(() => {
+          // Graceful CSS full-viewport fallback if browser blocks fullscreen API
+        });
+      }
+    }
+
+    function exitFullscreen() {
+      document.body.classList.remove('is-fullscreen', 'hud-visible');
+      if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement) {
+        document.body.classList.remove('is-fullscreen', 'hud-visible');
+      }
+    });
+
+    window.addEventListener('mousemove', showHudTemporarily);
 
     // Clicking any slide in grid mode opens it in presentation view
     slides.forEach((el, idx) => {
@@ -1320,6 +1456,17 @@
       } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
         e.preventDefault();
         prevSlide();
+      } else if (e.key === 'f' || e.key === 'F' || e.key === 'а' || e.key === 'А') {
+        e.preventDefault();
+        if (document.body.classList.contains('is-fullscreen')) {
+          exitFullscreen();
+        } else {
+          enterFullscreen();
+        }
+      } else if (e.key === 'Escape') {
+        if (document.body.classList.contains('is-fullscreen')) {
+          exitFullscreen();
+        }
       }
     });
   </script>
