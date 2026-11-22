@@ -1,7 +1,11 @@
 {
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/presentation",
+      "destination": "/presentation.html"
+    },
+    {
+      "source": "/((?!presentation\\.html|.*\\..*).*)",
       "destination": "/index.html"
     }
   ]
