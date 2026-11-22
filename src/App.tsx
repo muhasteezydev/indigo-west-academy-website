@@ -220,21 +220,28 @@ export function App() {
         {/* Left Brand Logo -> Home */}
         <button
           onClick={() => navigate('home')}
-          className="text-left leading-none focus:outline-none"
+          className="flex items-center gap-3 text-left leading-none focus:outline-none"
         >
-          <div
-            className={`text-lg font-extrabold tracking-[-0.035em] sm:text-xl ${
-              onLightSky ? 'text-[#051F20]' : 'text-[#DAF1DE]'
-            }`}
-          >
-            indigo west academy
-          </div>
-          <div
-            className={`mt-0.5 text-[10px] font-medium tracking-tight ${
-              onLightSky ? 'text-[#163832]' : 'text-[#8EB69B]'
-            }`}
-          >
-            г. бишкек
+          <img
+            src="/indigo-logo.png"
+            alt="Indigo West Academy Logo"
+            className="h-11 w-11 shrink-0 rounded-full object-cover shadow-md shadow-[#051F20]/25 ring-1 ring-[#8EB69B]/35"
+          />
+          <div>
+            <div
+              className={`text-lg font-extrabold tracking-[-0.035em] sm:text-xl ${
+                onLightSky ? 'text-[#051F20]' : 'text-[#DAF1DE]'
+              }`}
+            >
+              indigo west academy
+            </div>
+            <div
+              className={`mt-0.5 text-[10px] font-medium tracking-tight ${
+                onLightSky ? 'text-[#163832]' : 'text-[#8EB69B]'
+              }`}
+            >
+              г. бишкек
+            </div>
           </div>
         </button>
 
@@ -286,15 +293,22 @@ export function App() {
     <footer className="bg-[#051F20] py-10 text-[#DAF1DE]">
       <div className="mx-auto max-w-6xl px-5">
         <div className="flex flex-col items-start justify-between gap-6 border-t border-[#163832] pt-8 sm:flex-row sm:items-center">
-          <div>
-            <button
-              onClick={() => navigate('home')}
-              className="text-xl font-extrabold tracking-tight text-[#DAF1DE]"
-            >
-              indigo west academy
-            </button>
-            <div className="mt-1 text-xs text-[#8EB69B]">
-              © {new Date().getFullYear()} г. бишкек • западный кампус (west campus)
+          <div className="flex items-center gap-3">
+            <img
+              src="/indigo-logo.png"
+              alt="Indigo West Academy"
+              className="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-[#235347]"
+            />
+            <div>
+              <button
+                onClick={() => navigate('home')}
+                className="text-xl font-extrabold tracking-tight text-[#DAF1DE]"
+              >
+                indigo west academy
+              </button>
+              <div className="mt-0.5 text-xs text-[#8EB69B]">
+                © {new Date().getFullYear()} г. бишкек • западный кампус (west campus)
+              </div>
             </div>
           </div>
 
@@ -329,13 +343,20 @@ export function App() {
         <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
           <button
             onClick={() => navigate('home')}
-            className="text-left focus:outline-none"
+            className="flex items-center gap-3 text-left focus:outline-none"
           >
-            <div className="text-xl font-extrabold tracking-tight text-[#DAF1DE]">
-              indigo west academy
-            </div>
-            <div className="text-[10px] tracking-wide text-[#8EB69B]">
-              служебный доступ • г. бишкек
+            <img
+              src="/indigo-logo.png"
+              alt="Indigo West Academy"
+              className="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-[#8EB69B]/40"
+            />
+            <div>
+              <div className="text-xl font-extrabold tracking-tight text-[#DAF1DE]">
+                indigo west academy
+              </div>
+              <div className="text-[10px] tracking-wide text-[#8EB69B]">
+                служебный доступ • г. бишкек
+              </div>
             </div>
           </button>
 
@@ -712,7 +733,12 @@ export function App() {
 
             {renderNavbar(true)}
 
-            <div className="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-5 pt-8 pb-32 text-center sm:pt-10 sm:pb-44">
+            <div className="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-5 pt-6 pb-32 text-center sm:pt-8 sm:pb-44">
+              <img
+                src="/indigo-logo-4k.png"
+                alt="Indigo West Academy Crest"
+                className="mb-4 h-20 w-20 rounded-full object-cover shadow-xl shadow-[#051F20]/30 ring-2 ring-[#051F20]/15 sm:h-24 sm:w-24"
+              />
               <div className="mb-2 text-lg font-extrabold tracking-[-0.035em] text-[#051F20] sm:text-xl">
                 Learn · Grow · Serve
               </div>
