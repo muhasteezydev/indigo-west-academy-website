@@ -111,6 +111,7 @@
     .ctrl-btn:hover {
       background: var(--pine-emerald);
       border-color: var(--sage-mint);
+      color: #FFFFFF;
     }
 
     .ctrl-btn.active,
@@ -120,8 +121,11 @@
       border-color: var(--mint-mist);
     }
 
+    .ctrl-btn.active:hover,
     .ctrl-btn.primary:hover {
       background: var(--sage-mint);
+      color: var(--pine-abyss);
+      border-color: var(--sage-mint);
     }
 
     /* Presentation Stage */
@@ -446,7 +450,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 3.2cqw;
+      padding: 1.8cqw 3.2cqw;
     }
 
     .s3-banner-bg {
@@ -606,7 +610,7 @@
       background: var(--mint-mist);
     }
 
-    .s4-card h4 {
+    .s4-card h3 {
       font-size: 1.24cqw;
       font-weight: 800;
       color: var(--pine-abyss);
@@ -780,6 +784,9 @@
       display: none;
       align-items: center;
       gap: 14px;
+      background: #051F20;
+      padding: 8px 14px;
+      border-radius: 999px;
       color: var(--mint-mist);
       font-size: 13px;
       font-weight: 600;
@@ -874,6 +881,12 @@
       border-color: #DAF1DE;
     }
 
+    .fs-hud .fs-exit:hover {
+      background: #8EB69B;
+      color: #051F20;
+      border-color: #8EB69B;
+    }
+
     /* Print / Export to 16:9 PDF */
     @media print {
       @page {
@@ -882,6 +895,7 @@
       }
       body {
         background: white !important;
+        color: #051F20 !important;
       }
       .controls-bar,
       .single-nav {
@@ -991,10 +1005,11 @@
         <svg
           aria-hidden="true"
           class="watermark-svg"
-          style="right: 2cqw; bottom: -2cqw; width: 36cqw; height: 18cqw;"
-          viewBox="0 0 360 180"
+          style="right: -3cqw; bottom: -4cqw; width: 32cqw; height: 26cqw;"
+          viewBox="0 0 320 260"
+          fill="none"
         >
-          <text x="10" y="155" font-family="Inter, sans-serif" font-weight="800" font-size="165" fill="#8EB69B">IQA</text>
+          <path d="M40 240 C 120 120, 220 180, 300 30" stroke="#8EB69B" stroke-width="44" stroke-linecap="round" />
         </svg>
 
         <div>
@@ -1127,10 +1142,11 @@
         <svg
           aria-hidden="true"
           class="watermark-svg"
-          style="left: 18cqw; bottom: -3cqw; width: 52cqw; height: 20cqw;"
-          viewBox="0 0 520 200"
+          style="left: 10cqw; bottom: -4cqw; width: 64cqw; height: 22cqw;"
+          viewBox="0 0 640 220"
+          fill="none"
         >
-          <text x="10" y="175" font-family="Inter, sans-serif" font-weight="800" font-size="180" fill="#8EB69B">PAST</text>
+          <path d="M20 180 C 180 60, 420 210, 620 40" stroke="#8EB69B" stroke-width="46" stroke-linecap="round" />
         </svg>
 
         <div>
@@ -1145,7 +1161,7 @@
             <div class="s4-num-row"><div class="s4-circle">1</div></div>
             <div class="s4-card">
               <div>
-                <h4>Сбор и оцифровка</h4>
+                <h3>Сбор и оцифровка</h3>
                 <p>
                   Собрали прошлые экзамены IQA по математике, английскому, логике,
                   информатике и физике в единую структуру.
@@ -1159,7 +1175,7 @@
             <div class="s4-num-row"><div class="s4-circle">2</div></div>
             <div class="s4-card tint">
               <div>
-                <h4>Единые шифры</h4>
+                <h3>Единые шифры</h3>
                 <p>
                   Каждый вариант получил уникальный код, список проверяемых тем,
                   время написания и количество заданий.
@@ -1173,7 +1189,7 @@
             <div class="s4-num-row"><div class="s4-circle">3</div></div>
             <div class="s4-card">
               <div>
-                <h4>Поиск за 3 сек</h4>
+                <h3>Поиск за 3 сек</h3>
                 <p>
                   Удобная панель из 4 фильтров: предмет, параллель, учебная
                   четверть и формат нужного файла.
@@ -1187,7 +1203,7 @@
             <div class="s4-num-row"><div class="s4-circle">4</div></div>
             <div class="s4-card tint">
               <div>
-                <h4>Бланк и Ключи</h4>
+                <h3>Бланк и Ключи</h3>
                 <p>
                   Ученик отдельно скачивает чистый PDF-бланк для честной пробы, а
                   затем сверяется по ключам (Answer Key).
@@ -1201,7 +1217,7 @@
             <div class="s4-num-row"><div class="s4-circle">5</div></div>
             <div class="s4-card">
               <div>
-                <h4>Обновление базы</h4>
+                <h3>Обновление базы</h3>
                 <p>
                   После каждой четверти администрация загружает новый вариант через
                   закрытую панель — архив растёт каждый год.
