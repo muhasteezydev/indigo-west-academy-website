@@ -240,14 +240,11 @@
       color: var(--pine-abyss);
     }
 
-    .watermark-letter {
+    .watermark-svg {
       position: absolute;
       pointer-events: none;
-      font-weight: 800;
-      color: var(--sage-mint);
-      opacity: 0.14;
+      opacity: 0.16;
       user-select: none;
-      line-height: 0.8;
     }
 
     /* =========================================================================
@@ -991,9 +988,14 @@
          ======================================================================= -->
     <section class="slide-frame" data-slide="1">
       <div class="slide">
-        <div class="watermark-letter" style="right: 3cqw; bottom: -2cqw; font-size: 20cqw;">
-          IQA
-        </div>
+        <svg
+          aria-hidden="true"
+          class="watermark-svg"
+          style="right: 2cqw; bottom: -2cqw; width: 36cqw; height: 18cqw;"
+          viewBox="0 0 360 180"
+        >
+          <text x="10" y="155" font-family="Inter, sans-serif" font-weight="800" font-size="165" fill="#8EB69B">IQA</text>
+        </svg>
 
         <div>
           <div class="eyebrow">01 • Проблема, которая преследовала нашу школу</div>
@@ -1122,9 +1124,14 @@
          ======================================================================= -->
     <section class="slide-frame" data-slide="3">
       <div class="slide">
-        <div class="watermark-letter" style="left: 22cqw; bottom: -4cqw; font-size: 24cqw;">
-          PAST
-        </div>
+        <svg
+          aria-hidden="true"
+          class="watermark-svg"
+          style="left: 18cqw; bottom: -3cqw; width: 52cqw; height: 20cqw;"
+          viewBox="0 0 520 200"
+        >
+          <text x="10" y="175" font-family="Inter, sans-serif" font-weight="800" font-size="180" fill="#8EB69B">PAST</text>
+        </svg>
 
         <div>
           <div class="eyebrow">03 • Системное решение проблемы IQA Past Papers</div>
