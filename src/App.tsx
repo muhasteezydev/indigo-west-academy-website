@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   SCHOOL_NEWS,
   SCHOOL_TEACHERS,
@@ -9,11 +9,54 @@ import {
   type DesignSuggestion,
 } from './data/schoolData';
 
+type PageRoute = 'home' | 'news' | 'teachers' | 'iqa' | 'feedback' | 'contacts' | 'admin';
+
+function resolveRoute(pathname: string): PageRoute {
+  const clean = pathname.replace(/\/+$/, '') || '/';
+  if (clean === '/admin' || clean.startsWith('/admin/')) return 'admin';
+  if (clean === '/news') return 'news';
+  if (clean === '/teachers') return 'teachers';
+  if (clean === '/iqa') return 'iqa';
+  if (clean === '/feedback') return 'feedback';
+  if (clean === '/contacts') return 'contacts';
+  return 'home';
+}
+
+const ROUTE_PATHS: Record<PageRoute, string> = {
+  home: '/',
+  news: '/news',
+  teachers: '/teachers',
+  iqa: '/iqa',
+  feedback: '/feedback',
+  contacts: '/contacts',
+  admin: '/admin',
+};
+
 export function App() {
-  // Dual-site routing: "/" = public school portal (no admin UI visible), "/admin" = private staff portal
-  const [siteMode, setSiteMode] = useState<'public' | 'admin'>(() =>
-    window.location.pathname.startsWith('/admin') ? 'admin' : 'public'
+  const [route, setRoute] = useState<PageRoute>(() =>
+    resolveRoute(window.location.pathname)
   );
+
+  // Sync with browser back/forward buttons
+  useEffect(() => {
+    const onPopState = () => {
+      setRoute(resolveRoute(window.location.pathname));
+      window.scrollTo({ top: 0 });
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  const navigate = (next: PageRoute) => {
+    const targetPath = ROUTE_PATHS[next];
+    if (window.location.pathname !== targetPath) {
+      window.history.pushState({}, '', targetPath);
+    }
+    setRoute(next);
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+  };
+
+  // Hidden Admin Side state
   const [adminAuthenticated, setAdminAuthenticated] = useState(false);
   const [adminLogin, setAdminLogin] = useState('admin');
   const [adminPass, setAdminPass] = useState('');
@@ -22,31 +65,32 @@ export function App() {
     'news' | 'iqa' | 'teachers' | 'suggestions' | 'complaints' | 'socials'
   >('news');
 
-  // Interactive state for News
+  // News state
   const [newsCategory, setNewsCategory] = useState<string>('Все');
   const [readingNews, setReadingNews] = useState<DesignNewsItem | null>(null);
 
-  // Interactive state for IQA Past Papers finder (matching Paréa 4-dropdown bar)
+  // Teachers state
+  const [teacherDept, setTeacherDept] = useState<string>('Все кафедры');
+  const [teacherQuery, setTeacherQuery] = useState<string>('');
+
+  // IQA Past Papers state
   const [iqaSubject, setIqaSubject] = useState<string>('Все предметы');
   const [iqaGrade, setIqaGrade] = useState<string>('Все классы');
   const [iqaQuarter, setIqaQuarter] = useState<string>('Все четверти');
   const [iqaFileMode, setIqaFileMode] = useState<string>('Бланк PDF + Ключи');
-  const [showAllPapers, setShowAllPapers] = useState<boolean>(false);
 
-  // Interactive state for Teachers
-  const [teacherDept, setTeacherDept] = useState<string>('Все кафедры');
-
-  // Interactive state for Suggestions & Anonymous Complaints
-  const [feedbackTab, setFeedbackTab] = useState<'idea' | 'complaint'>('complaint');
-  const [suggestionsList, setSuggestionsList] = useState<DesignSuggestion[]>(SCHOOL_SUGGESTIONS);
+  // Suggestions & Anonymous Complaints state
+  const [feedbackTab, setFeedbackTab] = useState<'complaint' | 'idea'>('complaint');
+  const [suggestionsList, setSuggestionsList] =
+    useState<DesignSuggestion[]>(SCHOOL_SUGGESTIONS);
   const [ideaAuthor, setIdeaAuthor] = useState('');
   const [ideaRole, setIdeaRole] = useState('Ученик');
-  const [ideaCategory, setIdeaCategory] = useState<DesignSuggestion['category']>('Учебный процесс');
+  const [ideaCategory, setIdeaCategory] =
+    useState<DesignSuggestion['category']>('Учебный процесс');
   const [ideaTitle, setIdeaTitle] = useState('');
   const [ideaText, setIdeaText] = useState('');
   const [ideaSuccess, setIdeaSuccess] = useState(false);
 
-  // Anonymous Complaint Box state (strictly private, never shown on public board)
   const [complaintsList, setComplaintsList] = useState<
     Array<{
       ticket: string;
@@ -67,11 +111,17 @@ export function App() {
         'На большой перемене после 3-го урока не хватает горячих порций для старших классов, очередь не успевает пройти до звонка.',
     },
   ]);
-  const [complaintTopic, setComplaintTopic] = useState('Учебный процесс и оценивание');
-  const [complaintUrgency, setComplaintUrgency] = useState<'Обычное' | 'Срочное'>('Обычное');
+  const [complaintTopic, setComplaintTopic] = useState(
+    'Учебный процесс и оценивание'
+  );
+  const [complaintUrgency, setComplaintUrgency] = useState<
+    'Обычное' | 'Срочное'
+  >('Обычное');
   const [complaintLocation, setComplaintLocation] = useState('');
   const [complaintDetails, setComplaintDetails] = useState('');
-  const [lastComplaintTicket, setLastComplaintTicket] = useState<string | null>(null);
+  const [lastComplaintTicket, setLastComplaintTicket] = useState<string | null>(
+    null
+  );
 
   const filteredNews = useMemo(() => {
     if (newsCategory === 'Все') return SCHOOL_NEWS;
@@ -79,25 +129,28 @@ export function App() {
   }, [newsCategory]);
 
   const filteredTeachers = useMemo(() => {
-    if (teacherDept === 'Все кафедры') return SCHOOL_TEACHERS;
-    return SCHOOL_TEACHERS.filter((t) => t.department === teacherDept);
-  }, [teacherDept]);
+    return SCHOOL_TEACHERS.filter((t) => {
+      const mDept =
+        teacherDept === 'Все кафедры' || t.department === teacherDept;
+      const q = teacherQuery.trim().toLowerCase();
+      const mQuery =
+        !q ||
+        t.name.toLowerCase().includes(q) ||
+        t.subject.toLowerCase().includes(q) ||
+        t.notes.toLowerCase().includes(q);
+      return mDept && mQuery;
+    });
+  }, [teacherDept, teacherQuery]);
 
   const filteredPapers = useMemo(() => {
     return SCHOOL_IQA_PAPERS.filter((p) => {
       const mSubj = iqaSubject === 'Все предметы' || p.subject === iqaSubject;
       const mGrade = iqaGrade === 'Все классы' || `${p.grade} класс` === iqaGrade;
-      const mQuarter = iqaQuarter === 'Все четверти' || p.quarter === iqaQuarter;
+      const mQuarter =
+        iqaQuarter === 'Все четверти' || p.quarter === iqaQuarter;
       return mSubj && mGrade && mQuarter;
     });
   }, [iqaSubject, iqaGrade, iqaQuarter]);
-
-  const jumpTo = (id: string) => {
-    setSiteMode('public');
-    setTimeout(() => {
-      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-    }, 30);
-  };
 
   const handleIdeaSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,7 +158,9 @@ export function App() {
     const newEntry: DesignSuggestion = {
       id: Date.now(),
       date: new Date().toLocaleDateString('ru-RU'),
-      author: ideaAuthor.trim() ? `${ideaRole}: ${ideaAuthor.trim()}` : `${ideaRole} (Анонимно)`,
+      author: ideaAuthor.trim()
+        ? `${ideaRole}: ${ideaAuthor.trim()}`
+        : `${ideaRole} (Анонимно)`,
       category: ideaCategory,
       title: ideaTitle.trim(),
       text: ideaText.trim(),
@@ -149,20 +204,131 @@ export function App() {
   };
 
   // ===========================================================================
-  // ADMIN SIDE (SECOND SIDE OF THE SITE — MATCHING EXACT PALETTE & STYLE)
+  // SHARED FLOATING PILL NAVBAR (WORKS ON HOME & EVERY DEDICATED PAGE)
   // ===========================================================================
-  if (siteMode === 'admin') {
+  const renderNavbar = (onLightSky: boolean) => {
+    const navItems: Array<{ id: PageRoute; label: string }> = [
+      { id: 'news', label: 'новости' },
+      { id: 'teachers', label: 'учителя' },
+      { id: 'iqa', label: 'past papers iqa' },
+      { id: 'feedback', label: 'советы и жалобы' },
+      { id: 'contacts', label: 'соцсети' },
+    ];
+
+    return (
+      <header className="relative z-20 mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 pt-6 pb-4">
+        {/* Left Brand Logo -> Home */}
+        <button
+          onClick={() => navigate('home')}
+          className="text-left leading-none focus:outline-none"
+        >
+          <div
+            className={`text-2xl font-extrabold tracking-[-0.04em] ${
+              onLightSky ? 'text-[#051F20]' : 'text-[#DAF1DE]'
+            }`}
+          >
+            indigo
+          </div>
+          <div
+            className={`mt-0.5 text-[10px] font-medium tracking-tight ${
+              onLightSky ? 'text-[#163832]' : 'text-[#8EB69B]'
+            }`}
+          >
+            academy west • бишкек
+          </div>
+        </button>
+
+        {/* Center Floating Pill Menu */}
+        <nav
+          className={`flex flex-wrap items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-medium shadow-lg ${
+            onLightSky
+              ? 'bg-[#051F20] text-[#DAF1DE] shadow-[#051F20]/15'
+              : 'bg-[#0B2B26] text-[#DAF1DE] ring-1 ring-[#235347]/80'
+          }`}
+        >
+          {navItems.map((item) => {
+            const isActive = route === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => navigate(item.id)}
+                className={`rounded-full px-4 py-2 transition ${
+                  isActive
+                    ? 'bg-[#DAF1DE] font-semibold text-[#051F20]'
+                    : 'text-[#DAF1DE] hover:text-[#8EB69B]'
+                }`}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Right Contacts Pill */}
+        <button
+          onClick={() => navigate('contacts')}
+          className={`rounded-full px-6 py-3 text-[13px] font-semibold shadow-sm transition ${
+            route === 'contacts'
+              ? 'bg-[#8EB69B] text-[#051F20]'
+              : onLightSky
+              ? 'bg-[#F4FAF5] text-[#051F20] hover:bg-white'
+              : 'bg-[#DAF1DE] text-[#051F20] hover:bg-white'
+          }`}
+        >
+          контакты
+        </button>
+      </header>
+    );
+  };
+
+  // Shared compact footer on public pages
+  const renderFooter = () => (
+    <footer className="bg-[#051F20] py-10 text-[#DAF1DE]">
+      <div className="mx-auto max-w-6xl px-5">
+        <div className="flex flex-col items-start justify-between gap-6 border-t border-[#163832] pt-8 sm:flex-row sm:items-center">
+          <div>
+            <button
+              onClick={() => navigate('home')}
+              className="text-xl font-extrabold tracking-tight text-[#DAF1DE]"
+            >
+              indigo academy west
+            </button>
+            <div className="mt-1 text-xs text-[#8EB69B]">
+              © {new Date().getFullYear()} г. бишкек • западный кампус (west campus)
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-5 text-xs font-medium text-[#8EB69B]">
+            <button onClick={() => navigate('news')} className="hover:text-[#DAF1DE]">
+              новости
+            </button>
+            <button onClick={() => navigate('teachers')} className="hover:text-[#DAF1DE]">
+              учителя
+            </button>
+            <button onClick={() => navigate('iqa')} className="hover:text-[#DAF1DE]">
+              past papers iqa
+            </button>
+            <button onClick={() => navigate('feedback')} className="hover:text-[#DAF1DE]">
+              советы и жалобы
+            </button>
+            <button onClick={() => navigate('contacts')} className="hover:text-[#DAF1DE]">
+              соцсети и контакты
+            </button>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+
+  // ===========================================================================
+  // HIDDEN ADMIN SIDE (/admin) — COMPLETELY SEPARATE FROM PUBLIC SITE
+  // ===========================================================================
+  if (route === 'admin') {
     return (
       <div className="min-h-screen bg-[#051F20] text-[#DAF1DE]">
-        {/* Top Bar */}
         <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
-          <a
-            href="/"
-            onClick={(e) => {
-              e.preventDefault();
-              window.history.pushState({}, '', '/');
-              setSiteMode('public');
-            }}
+          <button
+            onClick={() => navigate('home')}
             className="text-left focus:outline-none"
           >
             <div className="text-2xl font-extrabold tracking-tight text-[#DAF1DE]">
@@ -171,19 +337,14 @@ export function App() {
             <div className="text-[10px] tracking-wide text-[#8EB69B]">
               academy west • служебный доступ
             </div>
-          </a>
+          </button>
 
-          <a
-            href="/"
-            onClick={(e) => {
-              e.preventDefault();
-              window.history.pushState({}, '', '/');
-              setSiteMode('public');
-            }}
+          <button
+            onClick={() => navigate('home')}
             className="rounded-full bg-[#DAF1DE] px-6 py-2.5 text-xs font-semibold text-[#051F20] transition hover:bg-[#8EB69B]"
           >
             ← открыть публичный сайт
-          </a>
+          </button>
         </header>
 
         <main className="mx-auto max-w-6xl px-5 pb-16">
@@ -194,7 +355,7 @@ export function App() {
               </h1>
               <p className="mt-1.5 text-sm text-[#163832]">
                 закрытая сторона сайта indigo academy west для управления новостями,
-                учителями и базой past papers of iqa.
+                учителями, базой iqa и анонимными жалобами.
               </p>
 
               <div className="mt-4 flex items-center justify-between rounded-2xl bg-[#8EB69B]/35 px-4 py-2.5 text-xs text-[#051F20]">
@@ -251,7 +412,6 @@ export function App() {
             </div>
           ) : (
             <div className="space-y-6">
-              {/* Admin Pill Navigation */}
               <div className="flex flex-wrap items-center justify-between gap-4 rounded-[28px] bg-[#0B2B26] p-6">
                 <div>
                   <div className="text-xs font-medium text-[#8EB69B]">
@@ -291,7 +451,6 @@ export function App() {
                 </div>
               </div>
 
-              {/* Admin Workspace Card */}
               <div className="rounded-[28px] bg-[#EEF7F0] p-8 text-[#051F20]">
                 {adminTab === 'news' && (
                   <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
@@ -303,10 +462,10 @@ export function App() {
                         className="w-full rounded-xl bg-white px-4 py-3 text-sm outline-none ring-1 ring-[#8EB69B]/40"
                       />
                       <select className="w-full rounded-xl bg-white px-4 py-3 text-sm outline-none ring-1 ring-[#8EB69B]/40">
-                        <option>Экзамены IQA</option>
                         <option>Олимпиады</option>
                         <option>Учебная часть</option>
                         <option>Объявление</option>
+                        <option>Экзамены IQA</option>
                       </select>
                       <textarea
                         rows={4}
@@ -330,7 +489,7 @@ export function App() {
                           className="flex items-center justify-between rounded-2xl bg-white p-4 ring-1 ring-[#8EB69B]/30"
                         >
                           <div>
-                            <div className="text-[11px] font-mono text-[#235347]">
+                            <div className="font-mono text-[11px] text-[#235347]">
                               {n.date} • {n.category}
                             </div>
                             <div className="mt-0.5 text-sm font-bold">{n.title}</div>
@@ -451,15 +610,13 @@ export function App() {
 
                 {adminTab === 'complaints' && (
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h2 className="text-xl font-bold">
-                          анонимные жалобы и обращения ({complaintsList.length})
-                        </h2>
-                        <p className="text-xs text-[#235347]">
-                          эти сообщения не отображаются на публичном сайте и видны только здесь.
-                        </p>
-                      </div>
+                    <div>
+                      <h2 className="text-xl font-bold">
+                        анонимные жалобы и обращения ({complaintsList.length})
+                      </h2>
+                      <p className="text-xs text-[#235347]">
+                        эти сообщения не отображаются на публичном сайте и видны только здесь.
+                      </p>
                     </div>
                     {complaintsList.map((c) => (
                       <div
@@ -507,7 +664,9 @@ export function App() {
                           className="rounded-2xl bg-white p-4 ring-1 ring-[#8EB69B]/30"
                         >
                           <div className="text-sm font-bold">{soc.name}</div>
-                          <div className="font-mono text-xs text-[#235347]">{soc.handle}</div>
+                          <div className="font-mono text-xs text-[#235347]">
+                            {soc.handle}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -522,331 +681,288 @@ export function App() {
   }
 
   // ===========================================================================
-  // PUBLIC SIDE — PARÉA REFERENCE LAYOUT IN EXACT 6-HEX BOTANICAL PALETTE
-  // (#051F20, #0B2B26, #163832, #235347, #8EB69B, #DAF1DE)
+  // PUBLIC MULTI-PAGE SITE (EACH SECTION IS ITS OWN DEDICATED PAGE!)
   // ===========================================================================
   return (
     <div className="min-h-screen bg-[#051F20] text-[#051F20]">
       {/* =====================================================================
-          BLOCK 1: ATMOSPHERIC HERO BANNER + FLOATING PILL NAVBAR
+          PAGE 1: HOME (/) — HERO + PILL DIRECTORY + 3 FEATURED NEWS PREVIEW
       ===================================================================== */}
-      <section className="relative overflow-hidden bg-[#DAF1DE]">
-        {/* Bespoke Bishkek Ala-Too + Academy Panoramic Artwork */}
-        <div
-          className="pointer-events-none absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url('/hero-indigo-west.jpg')` }}
-        />
-        {/* Subtle Top Pale Mint Sky Blend */}
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-[34%]"
-          style={{
-            background:
-              'linear-gradient(180deg, rgba(218,241,222,0.92) 0%, rgba(218,241,222,0) 100%)',
-          }}
-        />
-        {/* Bottom Seamless Dark Pine Fade into #051F20 */}
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-[30%]"
-          style={{
-            background:
-              'linear-gradient(180deg, rgba(5,31,32,0) 0%, rgba(5,31,32,0.82) 55%, #051F20 100%)',
-          }}
-        />
+      {route === 'home' && (
+        <>
+          <section className="relative overflow-hidden bg-[#DAF1DE]">
+            <div
+              className="pointer-events-none absolute inset-0 bg-cover bg-center bg-no-repeat"
+              style={{ backgroundImage: `url('/hero-indigo-west.jpg')` }}
+            />
+            <div
+              className="pointer-events-none absolute inset-x-0 top-0 h-[34%]"
+              style={{
+                background:
+                  'linear-gradient(180deg, rgba(218,241,222,0.92) 0%, rgba(218,241,222,0) 100%)',
+              }}
+            />
+            <div
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-[30%]"
+              style={{
+                background:
+                  'linear-gradient(180deg, rgba(5,31,32,0) 0%, rgba(5,31,32,0.82) 55%, #051F20 100%)',
+              }}
+            />
 
-        {/* Floating Top Navbar (Exact Paréa 3-part geometry) */}
-        <header className="relative z-20 mx-auto flex max-w-6xl items-center justify-between px-5 pt-6">
-          {/* Left Wordmark */}
-          <a href="#top" className="leading-none">
-            <div className="text-2xl font-extrabold tracking-[-0.04em] text-[#051F20]">
-              indigo
-            </div>
-            <div className="mt-0.5 text-[10px] font-medium tracking-tight text-[#163832]">
-              academy west • бишкек
-            </div>
-          </a>
+            {renderNavbar(true)}
 
-          {/* Center Dark Pill Menu */}
-          <nav className="hidden items-center gap-7 rounded-full bg-[#051F20] px-8 py-3 text-[13px] font-medium text-[#DAF1DE] shadow-lg shadow-[#051F20]/15 md:flex">
-            <button
-              onClick={() => jumpTo('news')}
-              className="transition hover:text-[#8EB69B]"
-            >
-              новости
-            </button>
-            <button
-              onClick={() => jumpTo('teachers')}
-              className="transition hover:text-[#8EB69B]"
-            >
-              учителя
-            </button>
-            <button
-              onClick={() => jumpTo('iqa')}
-              className="transition hover:text-[#8EB69B]"
-            >
-              past papers iqa
-            </button>
-            <button
-              onClick={() => jumpTo('suggestions')}
-              className="transition hover:text-[#8EB69B]"
-            >
-              советы и жалобы
-            </button>
-            <button
-              onClick={() => jumpTo('socials')}
-              className="transition hover:text-[#8EB69B]"
-            >
-              соцсети
-            </button>
-          </nav>
-
-          {/* Right Light Pill Button (Contacts — matches Paréa reference, zero admin mention) */}
-          <button
-            onClick={() => jumpTo('socials')}
-            className="rounded-full bg-[#F4FAF5] px-6 py-3 text-[13px] font-semibold text-[#051F20] shadow-sm transition hover:bg-white"
-          >
-            контакты
-          </button>
-        </header>
-
-        {/* Center Display Wordmark & CTA over Panoramic Sky */}
-        <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-5 pt-8 pb-32 text-center sm:pt-10 sm:pb-44">
-          <h1 className="text-[64px] font-extrabold leading-none tracking-[-0.045em] text-[#051F20] sm:text-[92px]">
-            indigo
-          </h1>
-          <p className="mt-3 max-w-md text-sm font-medium leading-relaxed text-[#0B2B26] sm:text-base">
-            школа в бишкеке, где учёба звучит как жизнь, а не скучный учебник.
-            <br />
-            сильные учителя, живое комьюнити и рост каждый день.
-          </p>
-          <button
-            onClick={() => jumpTo('news')}
-            className="mt-5 rounded-full bg-[#051F20] px-7 py-3.5 text-xs font-semibold tracking-wide text-[#DAF1DE] shadow-xl shadow-[#051F20]/25 transition hover:bg-[#163832] sm:text-sm"
-          >
-            новости и жизнь школы →
-          </button>
-        </div>
-
-        {/* Bottom Signature Staggered Two-Line Statement (Paréa style) */}
-        <div className="relative z-10 mx-auto max-w-5xl px-6 pt-2 pb-12">
-          <div className="text-3xl font-extrabold leading-[1.12] tracking-[-0.03em] sm:text-5xl lg:text-[52px]">
-            <div>
-              <span className="text-[#8EB69B]">учим</span>{' '}
-              <span className="text-[#DAF1DE]">думать.</span>
-            </div>
-            <div className="mt-1 sm:pl-24 md:pl-36">
-              <span className="text-[#DAF1DE]">растём вместе</span>{' '}
-              <span className="text-[#8EB69B]">в indigo.</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* =====================================================================
-          BLOCK 2: ROUNDED LIGHT SHEET — PILL DIRECTORY + SCHOOL STATEMENT
-          (Exact match to Paréa's "язык на уровне носителя" + "больше чем школа")
-      ===================================================================== */}
-      <section className="rounded-[36px] bg-[#EEF7F0] py-12 sm:py-16">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-5 lg:grid-cols-12">
-          {/* Left White Pill Card */}
-          <div className="rounded-[28px] bg-white p-7 shadow-xs sm:p-10 lg:col-span-8">
-            <h2 className="text-2xl font-bold tracking-[-0.025em] text-[#051F20] sm:text-[28px]">
-              школа, в которой хочется учиться и развиваться
-            </h2>
-
-            <div className="mt-7 flex flex-wrap gap-2.5">
-              <button
-                onClick={() => jumpTo('news')}
-                className="rounded-full bg-[#051F20] px-5 py-2.5 text-xs font-medium text-[#DAF1DE] transition hover:bg-[#163832] sm:text-sm"
-              >
-                новости кампуса
-              </button>
-              <button
-                onClick={() => jumpTo('teachers')}
-                className="rounded-full bg-[#8EB69B]/45 px-5 py-2.5 text-xs font-medium text-[#051F20] transition hover:bg-[#8EB69B]/70 sm:text-sm"
-              >
-                учительский состав
-              </button>
-              <button
-                onClick={() => {
-                  setNewsCategory('Олимпиады');
-                  jumpTo('news');
-                }}
-                className="rounded-full border border-[#163832]/30 bg-white px-5 py-2.5 text-xs font-medium text-[#051F20] transition hover:border-[#051F20] sm:text-sm"
-              >
-                олимпиадная сборная
-              </button>
-              <button
-                onClick={() => {
-                  setTeacherDept('Иностранные языки');
-                  jumpTo('teachers');
-                }}
-                className="rounded-full border border-[#163832]/30 bg-white px-5 py-2.5 text-xs font-medium text-[#051F20] transition hover:border-[#051F20] sm:text-sm"
-              >
-                английский и дебаты
-              </button>
-              <button
-                onClick={() => {
-                  setTeacherDept('Точные науки (STEM)');
-                  jumpTo('teachers');
-                }}
-                className="rounded-full bg-[#051F20] px-5 py-2.5 text-xs font-medium text-[#DAF1DE] transition hover:bg-[#163832] sm:text-sm"
-              >
-                математика и программирование
-              </button>
-              <button
-                onClick={() => {
-                  setFeedbackTab('idea');
-                  jumpTo('suggestions');
-                }}
-                className="rounded-full bg-[#8EB69B]/45 px-5 py-2.5 text-xs font-medium text-[#051F20] transition hover:bg-[#8EB69B]/70 sm:text-sm"
-              >
-                советы как улучшить школу
-              </button>
-              <button
-                onClick={() => {
-                  setFeedbackTab('complaint');
-                  jumpTo('suggestions');
-                }}
-                className="rounded-full bg-[#051F20] px-5 py-2.5 text-xs font-medium text-[#DAF1DE] transition hover:bg-[#163832] sm:text-sm"
-              >
-                анонимный бланк жалоб
-              </button>
-              <button
-                onClick={() => jumpTo('socials')}
-                className="rounded-full bg-[#8EB69B]/45 px-5 py-2.5 text-xs font-medium text-[#051F20] transition hover:bg-[#8EB69B]/70 sm:text-sm"
-              >
-                школьные медиа и соцсети
-              </button>
-              <button
-                onClick={() => jumpTo('iqa')}
-                className="rounded-full border border-[#163832]/30 bg-white px-5 py-2.5 text-xs font-medium text-[#051F20] transition hover:border-[#051F20] sm:text-sm"
-              >
-                архив past papers of iqa
-              </button>
-              <button
-                onClick={() => jumpTo('news')}
-                className="rounded-full bg-[#051F20] px-5 py-2.5 text-xs font-medium text-[#DAF1DE] transition hover:bg-[#163832] sm:text-sm"
-              >
-                события и ивенты бишкека
-              </button>
-              <button
-                onClick={() => {
-                  setTeacherDept('Гуманитарные науки');
-                  jumpTo('teachers');
-                }}
-                className="rounded-full bg-[#0B2B26] px-5 py-2.5 text-xs font-medium text-[#DAF1DE] transition hover:bg-[#163832] sm:text-sm"
-              >
-                языки, культура и история
-              </button>
-              <button
-                onClick={() => jumpTo('suggestions')}
-                className="rounded-full bg-[#8EB69B]/45 px-5 py-2.5 text-xs font-medium text-[#051F20] transition hover:bg-[#8EB69B]/70 sm:text-sm"
-              >
-                школьные клубы и ивенты
-              </button>
-            </div>
-          </div>
-
-          {/* Right Deep Forest Card */}
-          <div className="flex flex-col justify-between rounded-[28px] bg-[#0B2B26] p-7 text-[#DAF1DE] sm:p-9 lg:col-span-4">
-            <div>
-              <h2 className="text-xl font-bold leading-snug tracking-[-0.02em] sm:text-2xl">
-                <span className="text-[#8EB69B]">indigo west</span> — больше, чем
-                просто школа
-              </h2>
-              <p className="mt-5 text-sm leading-relaxed text-[#DAF1DE]/85">
-                мы создаём в бишкеке современную школьную среду, где каждый ученик
-                чувствует поддержку преподавателей, находит сильное окружение и
-                раскрывает свой потенциал.
+            <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-5 pt-8 pb-32 text-center sm:pt-10 sm:pb-44">
+              <h1 className="text-[64px] font-extrabold leading-none tracking-[-0.045em] text-[#051F20] sm:text-[92px]">
+                indigo
+              </h1>
+              <p className="mt-3 max-w-md text-sm font-medium leading-relaxed text-[#0B2B26] sm:text-base">
+                школа в бишкеке, где учёба звучит как жизнь, а не скучный учебник.
+                <br />
+                сильные учителя, живое комьюнити и рост каждый день.
               </p>
-              <p className="mt-4 text-sm leading-relaxed text-[#8EB69B]">
-                актуальные новости кампуса, открытый учительский состав, живое
-                комьюнити и реальный голос учеников — ничего лишнего.
-              </p>
+              <button
+                onClick={() => navigate('news')}
+                className="mt-5 rounded-full bg-[#051F20] px-7 py-3.5 text-xs font-semibold tracking-wide text-[#DAF1DE] shadow-xl shadow-[#051F20]/25 transition hover:bg-[#163832] sm:text-sm"
+              >
+                новости и жизнь школы →
+              </button>
             </div>
 
-            <div className="mt-6 flex items-center justify-between border-t border-[#235347] pt-4 text-xs text-[#8EB69B]">
-              <span>г. Бишкек • West Campus</span>
-              <span className="font-mono text-[#DAF1DE]">2026 / 2027</span>
+            <div className="relative z-10 mx-auto max-w-5xl px-6 pt-2 pb-12">
+              <div className="text-3xl font-extrabold leading-[1.12] tracking-[-0.03em] sm:text-5xl lg:text-[52px]">
+                <div>
+                  <span className="text-[#8EB69B]">учим</span>{' '}
+                  <span className="text-[#DAF1DE]">думать.</span>
+                </div>
+                <div className="mt-1 sm:pl-24 md:pl-36">
+                  <span className="text-[#DAF1DE]">растём вместе</span>{' '}
+                  <span className="text-[#8EB69B]">в indigo.</span>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      </section>
+          </section>
 
-      {/* =====================================================================
-          BLOCK 3: DARK PINE SECTION (#051F20)
-          PART A: НОВОСТИ ШКОЛЫ IN 3 SIGNATURE TALL GRADIENT CARDS
-          PART B: PAST PAPERS OF IQA IN THE SIGNATURE LIGHT #DAF1DE FINDER BAR
-      ===================================================================== */}
-      <section className="bg-[#051F20] py-14 sm:py-20">
-        <div className="mx-auto max-w-6xl space-y-14 px-5">
-          {/* PART A: НОВОСТИ (Matching Paréa's "форматы обучения" 3 tall cards) */}
-          <div id="news" className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-            {/* Left Intro Column */}
-            <div className="flex flex-col justify-between lg:col-span-3">
-              <div>
-                <h2 className="text-3xl font-bold leading-tight tracking-[-0.03em] text-[#DAF1DE] sm:text-4xl">
-                  новости
-                  <br />
-                  кампуса
+          {/* Rounded Light Directory Sheet */}
+          <section className="rounded-[36px] bg-[#EEF7F0] py-12 sm:py-16">
+            <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-5 lg:grid-cols-12">
+              <div className="rounded-[28px] bg-white p-7 shadow-xs sm:p-10 lg:col-span-8">
+                <h2 className="text-2xl font-bold tracking-[-0.025em] text-[#051F20] sm:text-[28px]">
+                  выберите нужный раздел школы
                 </h2>
-                <p className="mt-5 text-sm leading-relaxed text-[#8EB69B]">
-                  главные события indigo academy west в бишкеке: победы наших
-                  сборных на олимпиадах, школьные ивенты и важные объявления
-                  кампуса.
+                <p className="mt-2 text-sm text-[#235347]">
+                  каждый раздел открывается на отдельной чистой странице.
                 </p>
 
-                {/* Subtle Category Filter Pills */}
-                <div className="mt-6 flex flex-wrap gap-2">
-                  {['Все', 'Экзамены IQA', 'Олимпиады', 'Учебная часть'].map((cat) => (
+                <div className="mt-6 flex flex-wrap gap-2.5">
+                  <button
+                    onClick={() => navigate('news')}
+                    className="rounded-full bg-[#051F20] px-5 py-2.5 text-xs font-medium text-[#DAF1DE] transition hover:bg-[#163832] sm:text-sm"
+                  >
+                    новости кампуса →
+                  </button>
+                  <button
+                    onClick={() => navigate('teachers')}
+                    className="rounded-full bg-[#8EB69B]/45 px-5 py-2.5 text-xs font-medium text-[#051F20] transition hover:bg-[#8EB69B]/70 sm:text-sm"
+                  >
+                    учительский состав →
+                  </button>
+                  <button
+                    onClick={() => {
+                      setFeedbackTab('complaint');
+                      navigate('feedback');
+                    }}
+                    className="rounded-full bg-[#051F20] px-5 py-2.5 text-xs font-medium text-[#DAF1DE] transition hover:bg-[#163832] sm:text-sm"
+                  >
+                    анонимный бланк жалоб →
+                  </button>
+                  <button
+                    onClick={() => {
+                      setFeedbackTab('idea');
+                      navigate('feedback');
+                    }}
+                    className="rounded-full border border-[#163832]/30 bg-white px-5 py-2.5 text-xs font-medium text-[#051F20] transition hover:border-[#051F20] sm:text-sm"
+                  >
+                    советы как улучшить школу →
+                  </button>
+                  <button
+                    onClick={() => navigate('iqa')}
+                    className="rounded-full bg-[#8EB69B]/45 px-5 py-2.5 text-xs font-medium text-[#051F20] transition hover:bg-[#8EB69B]/70 sm:text-sm"
+                  >
+                    past papers of iqa →
+                  </button>
+                  <button
+                    onClick={() => navigate('contacts')}
+                    className="rounded-full border border-[#163832]/30 bg-white px-5 py-2.5 text-xs font-medium text-[#051F20] transition hover:border-[#051F20] sm:text-sm"
+                  >
+                    соцсети и контакты в бишкеке →
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col justify-between rounded-[28px] bg-[#0B2B26] p-7 text-[#DAF1DE] sm:p-9 lg:col-span-4">
+                <div>
+                  <h2 className="text-xl font-bold leading-snug tracking-[-0.02em] sm:text-2xl">
+                    <span className="text-[#8EB69B]">indigo west</span> — больше, чем
+                    просто школа
+                  </h2>
+                  <p className="mt-4 text-sm leading-relaxed text-[#DAF1DE]/85">
+                    современная школьная среда в бишкеке, где каждый ученик
+                    чувствует поддержку преподавателей, находит сильное окружение
+                    и может открыто влиять на жизнь кампуса.
+                  </p>
+                </div>
+                <div className="mt-6 flex items-center justify-between border-t border-[#235347] pt-4 text-xs text-[#8EB69B]">
+                  <span>г. Бишкек • West Campus</span>
+                  <span className="font-mono text-[#DAF1DE]">2026 / 2027</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Home Highlight: 3 Tall Gradient Cards (Quick Portal Entry) */}
+          <section className="bg-[#051F20] pt-14 pb-6">
+            <div className="mx-auto max-w-6xl px-5">
+              <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+                <div className="flex flex-col justify-between lg:col-span-3">
+                  <div>
+                    <h2 className="text-3xl font-bold leading-tight tracking-[-0.03em] text-[#DAF1DE]">
+                      последние
+                      <br />
+                      новости
+                    </h2>
+                    <p className="mt-4 text-sm leading-relaxed text-[#8EB69B]">
+                      свежие события кампуса, олимпиадные победы и обновления
+                      школы.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => navigate('news')}
+                    className="mt-6 w-fit rounded-full bg-[#DAF1DE] px-6 py-2.5 text-xs font-semibold text-[#051F20] transition hover:bg-[#8EB69B]"
+                  >
+                    все новости ({SCHOOL_NEWS.length}) →
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-3 lg:col-span-9">
+                  {SCHOOL_NEWS.slice(0, 3).map((item, idx) => {
+                    const isCenter = idx === 1;
+                    return (
+                      <article
+                        key={item.id}
+                        onClick={() => setReadingNews(item)}
+                        className={`group relative flex min-h-[370px] cursor-pointer flex-col justify-between overflow-hidden rounded-[26px] p-6 transition duration-300 hover:-translate-y-1 ${
+                          isCenter ? 'indigo-tall-card' : 'indigo-tall-card-alt'
+                        }`}
+                      >
+                        <div className="relative z-10">
+                          <div className="flex items-center justify-between text-[11px] font-semibold text-[#163832]">
+                            <span className="lowercase">{item.category}</span>
+                            <span className="font-mono">{item.date}</span>
+                          </div>
+                          <h3 className="mt-3 text-lg font-extrabold leading-snug tracking-[-0.02em] text-[#051F20]">
+                            {item.title}
+                          </h3>
+                          <p className="mt-3 text-xs leading-relaxed text-[#0B2B26]/90">
+                            {item.summary}
+                          </p>
+                        </div>
+
+                        <svg
+                          viewBox="0 0 320 120"
+                          preserveAspectRatio="none"
+                          className="pointer-events-none absolute inset-x-0 bottom-0 h-28 w-full opacity-45"
+                        >
+                          <path
+                            d="M0,120 L0,76 L32,54 L66,68 L108,34 L152,60 L196,28 L244,58 L286,40 L320,62 L320,120 Z"
+                            fill="#051F20"
+                          />
+                        </svg>
+
+                        <div className="relative z-10 pt-8">
+                          <button
+                            type="button"
+                            className={`w-full rounded-full py-2.5 text-xs font-semibold transition ${
+                              isCenter
+                                ? 'bg-[#DAF1DE] text-[#051F20] group-hover:bg-white'
+                                : 'border border-[#DAF1DE]/70 bg-[#051F20]/40 text-[#DAF1DE] group-hover:bg-[#DAF1DE] group-hover:text-[#051F20]'
+                            }`}
+                          >
+                            читать подробнее →
+                          </button>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </section>
+        </>
+      )}
+
+      {/* =====================================================================
+          PAGE 2: НОВОСТИ (/news)
+      ===================================================================== */}
+      {route === 'news' && (
+        <div className="min-h-screen bg-[#051F20]">
+          {renderNavbar(false)}
+
+          <div className="mx-auto max-w-6xl px-5 pt-8 pb-10">
+            <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wider text-[#8EB69B]">
+                  indigo academy west • хроника школы
+                </div>
+                <h1 className="mt-1 text-4xl font-extrabold tracking-[-0.035em] text-[#DAF1DE] sm:text-5xl">
+                  новости и события кампуса
+                </h1>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {['Все', 'Олимпиады', 'Объявление', 'Учебная часть', 'Экзамены IQA'].map(
+                  (cat) => (
                     <button
                       key={cat}
                       onClick={() => setNewsCategory(cat)}
-                      className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition ${
+                      className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
                         newsCategory === cat
                           ? 'bg-[#DAF1DE] text-[#051F20]'
-                          : 'bg-[#0B2B26] text-[#8EB69B] hover:bg-[#163832] hover:text-[#DAF1DE]'
+                          : 'bg-[#0B2B26] text-[#8EB69B] ring-1 ring-[#235347] hover:text-[#DAF1DE]'
                       }`}
                     >
                       {cat.toLowerCase()}
                     </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-8 hidden text-xs text-[#8EB69B]/70 lg:block">
-                нажмите на любую карточку, чтобы прочитать полный текст новости или
-                приказа учебной части.
+                  )
+                )}
               </div>
             </div>
 
-            {/* Right 3 Tall Gradient Cards (Exact Paréa Card Anatomy) */}
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-3 lg:col-span-9">
+            {/* 3 Featured Tall Gradient Cards */}
+            <div className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-3">
               {filteredNews.slice(0, 3).map((item, idx) => {
                 const isCenter = idx === 1;
                 return (
                   <article
                     key={item.id}
                     onClick={() => setReadingNews(item)}
-                    className={`group relative flex min-h-[390px] cursor-pointer flex-col justify-between overflow-hidden rounded-[26px] p-6 transition duration-300 hover:-translate-y-1 ${
+                    className={`group relative flex min-h-[380px] cursor-pointer flex-col justify-between overflow-hidden rounded-[26px] p-6 transition duration-300 hover:-translate-y-1 ${
                       isCenter ? 'indigo-tall-card' : 'indigo-tall-card-alt'
                     }`}
                   >
-                    {/* Top Editorial Text */}
                     <div className="relative z-10">
                       <div className="flex items-center justify-between text-[11px] font-semibold text-[#163832]">
                         <span className="lowercase">{item.category}</span>
                         <span className="font-mono">{item.date}</span>
                       </div>
-                      <h3 className="mt-3 text-xl font-extrabold leading-snug tracking-[-0.02em] text-[#051F20]">
+                      <h2 className="mt-3 text-xl font-extrabold leading-snug tracking-[-0.02em] text-[#051F20]">
                         {item.title}
-                      </h3>
+                      </h2>
                       <p className="mt-3 text-xs leading-relaxed text-[#0B2B26]/90 sm:text-[13px]">
                         {item.summary}
                       </p>
                     </div>
 
-                    {/* Subtle Mountain & Academy Silhouette Overlay at Bottom */}
                     <svg
                       viewBox="0 0 320 120"
                       preserveAspectRatio="none"
@@ -858,17 +974,16 @@ export function App() {
                       />
                     </svg>
 
-                    {/* Signature Bottom Pill CTA */}
                     <div className="relative z-10 pt-10">
                       <button
                         type="button"
                         className={`w-full rounded-full py-2.5 text-xs font-semibold transition ${
                           isCenter
                             ? 'bg-[#DAF1DE] text-[#051F20] group-hover:bg-white'
-                            : 'border border-[#DAF1DE]/70 bg-[#051F20]/40 text-[#DAF1DE] backdrop-blur-xs group-hover:bg-[#DAF1DE] group-hover:text-[#051F20]'
+                            : 'border border-[#DAF1DE]/70 bg-[#051F20]/40 text-[#DAF1DE] group-hover:bg-[#DAF1DE] group-hover:text-[#051F20]'
                         }`}
                       >
-                        читать подробнее →
+                        читать полностью →
                       </button>
                     </div>
                   </article>
@@ -877,130 +992,268 @@ export function App() {
             </div>
           </div>
 
-          {/* PART B: PAST PAPERS OF IQA — EXACT PARÉA LIGHT ROUNDED 4-DROPDOWN CARD */}
-          <div id="iqa" className="rounded-[28px] bg-[#DAF1DE] p-7 text-[#051F20] sm:p-10">
-            <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-wider text-[#235347]">
-                  indigo quiz assessment • официальный архив
-                </div>
-                <h2 className="mt-1 text-2xl font-bold tracking-[-0.025em] text-[#051F20] sm:text-3xl">
-                  быстрый поиск: past papers of iqa
+          {/* Remaining Archive News on Light Sheet */}
+          {filteredNews.length > 3 && (
+            <section className="rounded-[36px] bg-[#EEF7F0] py-12">
+              <div className="mx-auto max-w-6xl px-5">
+                <h2 className="text-xl font-bold text-[#051F20]">
+                  другие публикации и объявления
                 </h2>
+                <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {filteredNews.slice(3).map((item) => (
+                    <article
+                      key={item.id}
+                      onClick={() => setReadingNews(item)}
+                      className="cursor-pointer rounded-[24px] bg-white p-6 ring-1 ring-[#8EB69B]/35 transition hover:ring-[#051F20]"
+                    >
+                      <div className="flex items-center justify-between text-xs text-[#235347]">
+                        <span className="rounded-full bg-[#DAF1DE] px-3 py-0.5 font-semibold text-[#051F20]">
+                          {item.category.toLowerCase()}
+                        </span>
+                        <span className="font-mono">{item.date}</span>
+                      </div>
+                      <h3 className="mt-3 text-lg font-bold text-[#051F20]">
+                        {item.title}
+                      </h3>
+                      <p className="mt-1.5 text-xs leading-relaxed text-[#163832]">
+                        {item.summary}
+                      </p>
+                    </article>
+                  ))}
+                </div>
               </div>
-              <span className="font-mono text-xs font-semibold text-[#163832]">
-                найдено вариантов: {filteredPapers.length}
-              </span>
+            </section>
+          )}
+        </div>
+      )}
+
+      {/* =====================================================================
+          PAGE 3: УЧИТЕЛЬСКИЙ СОСТАВ (/teachers)
+      ===================================================================== */}
+      {route === 'teachers' && (
+        <div className="min-h-screen bg-[#051F20]">
+          {renderNavbar(false)}
+
+          <div className="mx-auto max-w-6xl px-5 pt-8 pb-10">
+            <div className="text-xs font-semibold uppercase tracking-wider text-[#8EB69B]">
+              кафедры и наставники • г. бишкек
+            </div>
+            <h1 className="mt-1 text-4xl font-extrabold tracking-[-0.035em] text-[#DAF1DE] sm:text-5xl">
+              учительский состав indigo west
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#8EB69B]">
+              преподаватели, олимпиадные тренеры и кураторы, которые помогают
+              ученикам раскрыть сильные стороны и поступить в ведущие вузы.
+            </p>
+          </div>
+
+          <section className="rounded-[36px] bg-[#EEF7F0] py-12">
+            <div className="mx-auto max-w-6xl px-5">
+              {/* Filter + Search Row */}
+              <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    'Все кафедры',
+                    'Точные науки (STEM)',
+                    'Иностранные языки',
+                    'Гуманитарные науки',
+                  ].map((dept) => (
+                    <button
+                      key={dept}
+                      onClick={() => setTeacherDept(dept)}
+                      className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
+                        teacherDept === dept
+                          ? 'bg-[#051F20] text-[#DAF1DE]'
+                          : 'bg-white text-[#051F20] ring-1 ring-[#8EB69B]/50 hover:bg-[#DAF1DE]'
+                      }`}
+                    >
+                      {dept.toLowerCase()}
+                    </button>
+                  ))}
+                </div>
+
+                <input
+                  type="text"
+                  value={teacherQuery}
+                  onChange={(e) => setTeacherQuery(e.target.value)}
+                  placeholder="поиск по имени или предмету..."
+                  className="w-full rounded-full bg-white px-5 py-2.5 text-xs text-[#051F20] placeholder-[#235347]/60 ring-1 ring-[#8EB69B]/50 outline-none focus:ring-[#051F20] md:w-72"
+                />
+              </div>
+
+              {/* Teachers Grid */}
+              <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+                {filteredTeachers.map((t) => {
+                  const initials = t.name
+                    .split(' ')
+                    .slice(0, 2)
+                    .map((w) => w[0])
+                    .join('');
+                  return (
+                    <div
+                      key={t.id}
+                      className="flex flex-col justify-between rounded-[26px] bg-white p-6 ring-1 ring-[#8EB69B]/35 transition hover:-translate-y-0.5 hover:ring-[#235347]"
+                    >
+                      <div>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#0B2B26] font-mono text-sm font-bold text-[#DAF1DE]">
+                            {initials}
+                          </div>
+                          <span className="whitespace-nowrap rounded-full bg-[#DAF1DE] px-3 py-1 font-mono text-[11px] font-semibold text-[#051F20]">
+                            {t.room} • стаж {t.experience}
+                          </span>
+                        </div>
+
+                        <h2 className="mt-4 text-lg font-bold leading-snug text-[#051F20]">
+                          {t.name}
+                        </h2>
+                        <div className="mt-0.5 text-xs font-medium text-[#235347]">
+                          {t.position}
+                        </div>
+                        <div className="mt-2 inline-block rounded-full bg-[#EEF7F0] px-3 py-1 text-[11px] font-semibold text-[#0B2B26]">
+                          {t.subject}
+                        </div>
+                        <p className="mt-3 text-xs leading-relaxed text-[#163832]">
+                          {t.notes}
+                        </p>
+                      </div>
+
+                      <div className="mt-5 border-t border-[#EEF7F0] pt-3.5 text-[11px] text-[#235347]">
+                        {t.education}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* =====================================================================
+          PAGE 4: PAST PAPERS OF IQA (/iqa)
+      ===================================================================== */}
+      {route === 'iqa' && (
+        <div className="min-h-screen bg-[#051F20]">
+          {renderNavbar(false)}
+
+          <div className="mx-auto max-w-6xl px-5 pt-8 pb-16">
+            <div className="mb-8">
+              <div className="text-xs font-semibold uppercase tracking-wider text-[#8EB69B]">
+                учебный архив • indigo quiz assessment
+              </div>
+              <h1 className="mt-1 text-4xl font-extrabold tracking-[-0.035em] text-[#DAF1DE] sm:text-5xl">
+                past papers of iqa
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#8EB69B]">
+                подборка прошлых вариантов iqa для самостоятельной подготовки по
+                предметам и параллелям (6–11 классы) с бланками и ключами.
+              </p>
             </div>
 
-            {/* 4 Clean White Selectors (Exact Paréa Form Row) */}
-            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div>
-                <label className="block text-xs font-medium text-[#163832]">
-                  предмет экзамена iqa
-                </label>
-                <select
-                  value={iqaSubject}
-                  onChange={(e) => {
-                    setIqaSubject(e.target.value);
-                    setShowAllPapers(true);
-                  }}
-                  className="mt-2 w-full rounded-xl bg-white px-4 py-3 text-sm font-medium text-[#051F20] outline-none ring-1 ring-[#8EB69B]/50 focus:ring-[#051F20]"
-                >
-                  <option>Все предметы</option>
-                  <option>Математика</option>
-                  <option>Английский язык</option>
-                  <option>Логика (IQ)</option>
-                  <option>Информатика</option>
-                  <option>Физика</option>
-                  <option>Кыргызский / Русский язык</option>
-                </select>
+            <div className="rounded-[28px] bg-[#DAF1DE] p-7 text-[#051F20] sm:p-10">
+              <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
+                <h2 className="text-xl font-bold tracking-[-0.02em] sm:text-2xl">
+                  фильтр вариантов по предмету и классу
+                </h2>
+                <span className="font-mono text-xs font-semibold text-[#163832]">
+                  найдено вариантов: {filteredPapers.length}
+                </span>
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-[#163832]">
-                  твоя параллель (класс)
-                </label>
-                <select
-                  value={iqaGrade}
-                  onChange={(e) => setIqaGrade(e.target.value)}
-                  className="mt-2 w-full rounded-xl bg-white px-4 py-3 text-sm font-medium text-[#051F20] outline-none ring-1 ring-[#8EB69B]/50 focus:ring-[#051F20]"
-                >
-                  <option>Все классы</option>
-                  <option>6 класс</option>
-                  <option>7 класс</option>
-                  <option>8 класс</option>
-                  <option>9 класс</option>
-                  <option>10 класс</option>
-                  <option>11 класс</option>
-                </select>
+              <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div>
+                  <label className="block text-xs font-medium text-[#163832]">
+                    предмет
+                  </label>
+                  <select
+                    value={iqaSubject}
+                    onChange={(e) => setIqaSubject(e.target.value)}
+                    className="mt-1.5 w-full rounded-xl bg-white px-4 py-3 text-sm font-medium text-[#051F20] outline-none ring-1 ring-[#8EB69B]/50 focus:ring-[#051F20]"
+                  >
+                    <option>Все предметы</option>
+                    <option>Математика</option>
+                    <option>Английский язык</option>
+                    <option>Логика (IQ)</option>
+                    <option>Информатика</option>
+                    <option>Физика</option>
+                    <option>Кыргызский / Русский язык</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-[#163832]">
+                    класс
+                  </label>
+                  <select
+                    value={iqaGrade}
+                    onChange={(e) => setIqaGrade(e.target.value)}
+                    className="mt-1.5 w-full rounded-xl bg-white px-4 py-3 text-sm font-medium text-[#051F20] outline-none ring-1 ring-[#8EB69B]/50 focus:ring-[#051F20]"
+                  >
+                    <option>Все классы</option>
+                    <option>6 класс</option>
+                    <option>7 класс</option>
+                    <option>8 класс</option>
+                    <option>9 класс</option>
+                    <option>10 класс</option>
+                    <option>11 класс</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-[#163832]">
+                    четверть
+                  </label>
+                  <select
+                    value={iqaQuarter}
+                    onChange={(e) => setIqaQuarter(e.target.value)}
+                    className="mt-1.5 w-full rounded-xl bg-white px-4 py-3 text-sm font-medium text-[#051F20] outline-none ring-1 ring-[#8EB69B]/50 focus:ring-[#051F20]"
+                  >
+                    <option>Все четверти</option>
+                    <option>I четверть</option>
+                    <option>IV четверть</option>
+                    <option>Годовой срез</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-[#163832]">
+                    формат
+                  </label>
+                  <select
+                    value={iqaFileMode}
+                    onChange={(e) => setIqaFileMode(e.target.value)}
+                    className="mt-1.5 w-full rounded-xl bg-white px-4 py-3 text-sm font-medium text-[#051F20] outline-none ring-1 ring-[#8EB69B]/50 focus:ring-[#051F20]"
+                  >
+                    <option>Бланк PDF + Ключи</option>
+                    <option>Только бланк</option>
+                    <option>Ключи и разбор</option>
+                  </select>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-[#163832]">
-                  четверть или срез
-                </label>
-                <select
-                  value={iqaQuarter}
-                  onChange={(e) => setIqaQuarter(e.target.value)}
-                  className="mt-2 w-full rounded-xl bg-white px-4 py-3 text-sm font-medium text-[#051F20] outline-none ring-1 ring-[#8EB69B]/50 focus:ring-[#051F20]"
-                >
-                  <option>Все четверти</option>
-                  <option>I четверть</option>
-                  <option>IV четверть</option>
-                  <option>Годовой срез</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-[#163832]">
-                  что скачать
-                </label>
-                <select
-                  value={iqaFileMode}
-                  onChange={(e) => setIqaFileMode(e.target.value)}
-                  className="mt-2 w-full rounded-xl bg-white px-4 py-3 text-sm font-medium text-[#051F20] outline-none ring-1 ring-[#8EB69B]/50 focus:ring-[#051F20]"
-                >
-                  <option>Бланк PDF + Ключи</option>
-                  <option>Только бланк для печати</option>
-                  <option>Ключи и разбор решений</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Action Pill Row */}
-            <div className="mt-5 flex flex-wrap items-center gap-3">
-              <button
-                onClick={() => setShowAllPapers((v) => !v)}
-                className="rounded-full bg-[#051F20] px-7 py-3 text-xs font-semibold text-[#DAF1DE] transition hover:bg-[#163832] sm:text-sm"
-              >
-                {showAllPapers
-                  ? `свернуть список вариантов (${filteredPapers.length})`
-                  : `показать варианты past papers (${filteredPapers.length}) →`}
-              </button>
               {(iqaSubject !== 'Все предметы' ||
                 iqaGrade !== 'Все классы' ||
                 iqaQuarter !== 'Все четверти') && (
-                <button
-                  onClick={() => {
-                    setIqaSubject('Все предметы');
-                    setIqaGrade('Все классы');
-                    setIqaQuarter('Все четверти');
-                  }}
-                  className="rounded-full border border-[#163832]/30 bg-white/70 px-4 py-2.5 text-xs font-semibold text-[#051F20] hover:bg-white"
-                >
-                  сбросить фильтры
-                </button>
+                <div className="mt-4">
+                  <button
+                    onClick={() => {
+                      setIqaSubject('Все предметы');
+                      setIqaGrade('Все классы');
+                      setIqaQuarter('Все четверти');
+                    }}
+                    className="rounded-full bg-[#051F20] px-5 py-2 text-xs font-semibold text-[#DAF1DE]"
+                  >
+                    сбросить фильтры
+                  </button>
+                </div>
               )}
-            </div>
 
-            {/* Matched Past Papers Clean List */}
-            {showAllPapers && (
-              <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div className="mt-7 grid grid-cols-1 gap-4 md:grid-cols-2">
                 {filteredPapers.length === 0 ? (
-                  <div className="col-span-2 rounded-2xl bg-white/80 p-6 text-center text-sm text-[#163832]">
-                    По выбранным фильтрам вариантов пока нет — попробуйте выбрать
-                    «Все классы» или другой предмет.
+                  <div className="col-span-2 rounded-2xl bg-white/85 p-8 text-center text-sm text-[#163832]">
+                    По выбранным фильтрам вариантов пока нет — выберите «Все классы»
+                    или другой предмет.
                   </div>
                 ) : (
                   filteredPapers.map((p) => (
@@ -1027,7 +1280,8 @@ export function App() {
 
                       <div className="mt-4 flex items-center justify-between border-t border-[#DAF1DE] pt-3.5">
                         <span className="font-mono text-[11px] text-[#235347]">
-                          {p.durationMin} мин • {p.questionsCount} заданий • {p.fileSize}
+                          {p.durationMin} мин • {p.questionsCount} заданий •{' '}
+                          {p.fileSize}
                         </span>
                         <div className="flex gap-2">
                           <a
@@ -1052,435 +1306,407 @@ export function App() {
                   ))
                 )}
               </div>
-            )}
+            </div>
           </div>
         </div>
-      </section>
+      )}
 
       {/* =====================================================================
-          BLOCK 4: ROUNDED LIGHT SHEET — УЧИТЕЛЬСКИЙ СОСТАВ + СОВЕТЫ ШКОЛЕ
+          PAGE 5: СОВЕТЫ И АНОНИМНЫЙ БЛАНК ЖАЛОБ (/feedback)
       ===================================================================== */}
-      <section className="rounded-[36px] bg-[#EEF7F0] py-14 sm:py-20">
-        <div className="mx-auto max-w-6xl space-y-16 px-5">
-          {/* УЧИТЕЛЬСКИЙ СОСТАВ */}
-          <div id="teachers">
-            <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-wider text-[#235347]">
-                  кафедры и наставники
-                </div>
-                <h2 className="mt-1 text-3xl font-bold tracking-[-0.03em] text-[#051F20] sm:text-4xl">
-                  учительский состав indigo west
-                </h2>
-              </div>
+      {route === 'feedback' && (
+        <div className="min-h-screen bg-[#051F20]">
+          {renderNavbar(false)}
 
-              <div className="flex flex-wrap gap-2">
-                {[
-                  'Все кафедры',
-                  'Точные науки (STEM)',
-                  'Иностранные языки',
-                  'Гуманитарные науки',
-                ].map((dept) => (
+          <div className="mx-auto max-w-6xl px-5 pt-8 pb-10">
+            <div className="text-xs font-semibold uppercase tracking-wider text-[#8EB69B]">
+              обратная связь • indigo academy west
+            </div>
+            <h1 className="mt-1 text-4xl font-extrabold tracking-[-0.035em] text-[#DAF1DE] sm:text-5xl">
+              советы школе и анонимный бланк жалоб
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#8EB69B]">
+              отправьте конфиденциальную жалобу без указания имени (видит только
+              руководство) или поделитесь открытой идеей, как сделать школу лучше.
+            </p>
+          </div>
+
+          <section className="rounded-[36px] bg-[#EEF7F0] py-12">
+            <div className="mx-auto grid max-w-6xl grid-cols-1 items-start gap-6 px-5 lg:grid-cols-12">
+              <div className="rounded-[28px] bg-white p-7 shadow-xs sm:p-9 lg:col-span-5">
+                <div className="grid grid-cols-2 gap-1.5 rounded-full bg-[#EEF7F0] p-1">
                   <button
-                    key={dept}
-                    onClick={() => setTeacherDept(dept)}
-                    className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-                      teacherDept === dept
+                    type="button"
+                    onClick={() => setFeedbackTab('complaint')}
+                    className={`rounded-full py-2.5 text-xs font-semibold transition ${
+                      feedbackTab === 'complaint'
                         ? 'bg-[#051F20] text-[#DAF1DE]'
-                        : 'bg-white text-[#051F20] ring-1 ring-[#8EB69B]/50 hover:bg-[#DAF1DE]'
+                        : 'text-[#163832] hover:text-[#051F20]'
                     }`}
                   >
-                    {dept.toLowerCase()}
+                    анонимная жалоба
                   </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-              {filteredTeachers.map((t) => {
-                const initials = t.name
-                  .split(' ')
-                  .slice(0, 2)
-                  .map((w) => w[0])
-                  .join('');
-                return (
-                  <div
-                    key={t.id}
-                    className="flex flex-col justify-between rounded-[26px] bg-white p-6 ring-1 ring-[#8EB69B]/35 transition hover:-translate-y-0.5 hover:ring-[#235347]"
+                  <button
+                    type="button"
+                    onClick={() => setFeedbackTab('idea')}
+                    className={`rounded-full py-2.5 text-xs font-semibold transition ${
+                      feedbackTab === 'idea'
+                        ? 'bg-[#051F20] text-[#DAF1DE]'
+                        : 'text-[#163832] hover:text-[#051F20]'
+                    }`}
                   >
-                    <div>
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#0B2B26] font-mono text-sm font-bold text-[#DAF1DE]">
-                          {initials}
-                        </div>
-                        <span className="rounded-full bg-[#DAF1DE] px-3 py-1 font-mono text-[11px] font-semibold text-[#051F20]">
-                          {t.room} • стаж {t.experience}
-                        </span>
-                      </div>
+                    совет школе
+                  </button>
+                </div>
 
-                      <h3 className="mt-4 text-lg font-bold leading-snug text-[#051F20]">
-                        {t.name}
-                      </h3>
-                      <div className="mt-1 text-xs font-semibold text-[#235347]">
-                        {t.subject}
-                      </div>
-                      <p className="mt-2.5 text-xs leading-relaxed text-[#163832]">
-                        {t.notes}
-                      </p>
+                {feedbackTab === 'complaint' ? (
+                  <div className="mt-6">
+                    <div className="text-xs font-semibold uppercase tracking-wider text-[#235347]">
+                      строго конфиденциально • без имени
+                    </div>
+                    <h2 className="mt-1 text-2xl font-bold tracking-[-0.025em] text-[#051F20]">
+                      анонимный бланк жалоб
+                    </h2>
+                    <div className="mt-3 rounded-2xl bg-[#DAF1DE]/75 p-3.5 text-xs leading-relaxed text-[#0B2B26]">
+                      <strong>100% анонимность:</strong> мы не спрашиваем имя,
+                      номер телефона или класс. Жалоба{' '}
+                      <strong>не публикуется</strong> на сайте и видна только
+                      руководству школы.
                     </div>
 
-                    <div className="mt-5 border-t border-[#EEF7F0] pt-3.5 text-[11px] text-[#235347]">
-                      {t.education}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* СОВЕТЫ И АНОНИМНЫЙ БЛАНК ЖАЛОБ */}
-          <div id="suggestions" className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
-            {/* Left White Rounded Card with Switcher: Anonymous Complaint vs Public Suggestion */}
-            <div className="rounded-[28px] bg-white p-7 shadow-xs sm:p-9 lg:col-span-5">
-              {/* Mode Switcher Pills */}
-              <div className="grid grid-cols-2 gap-1.5 rounded-full bg-[#EEF7F0] p-1">
-                <button
-                  type="button"
-                  onClick={() => setFeedbackTab('complaint')}
-                  className={`rounded-full py-2.5 text-xs font-semibold transition ${
-                    feedbackTab === 'complaint'
-                      ? 'bg-[#051F20] text-[#DAF1DE]'
-                      : 'text-[#163832] hover:text-[#051F20]'
-                  }`}
-                >
-                  анонимная жалоба
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFeedbackTab('idea')}
-                  className={`rounded-full py-2.5 text-xs font-semibold transition ${
-                    feedbackTab === 'idea'
-                      ? 'bg-[#051F20] text-[#DAF1DE]'
-                      : 'text-[#163832] hover:text-[#051F20]'
-                  }`}
-                >
-                  совет школе
-                </button>
-              </div>
-
-              {feedbackTab === 'complaint' ? (
-                <div className="mt-6">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-[#235347]">
-                    строго конфиденциально • без имени
-                  </div>
-                  <h2 className="mt-1 text-2xl font-bold tracking-[-0.025em] text-[#051F20]">
-                    анонимный бланк жалоб
-                  </h2>
-                  <div className="mt-3 rounded-2xl bg-[#DAF1DE]/75 p-3.5 text-xs leading-relaxed text-[#0B2B26]">
-                    <strong>100% анонимность:</strong> мы не спрашиваем имя, номер
-                    телефона или класс. Жалоба <strong>не публикуется</strong> на
-                    сайте и видна только руководству школы.
-                  </div>
-
-                  <form onSubmit={handleComplaintSubmit} className="mt-4 space-y-3.5">
-                    <div>
-                      <label className="block text-xs font-medium text-[#163832]">
-                        по какому вопросу обращение
-                      </label>
-                      <select
-                        value={complaintTopic}
-                        onChange={(e) => setComplaintTopic(e.target.value)}
-                        className="mt-1.5 w-full rounded-xl bg-[#EEF7F0] px-3.5 py-2.5 text-xs font-semibold text-[#051F20] outline-none"
-                      >
-                        <option>Учебный процесс и оценивание</option>
-                        <option>Отношения в классе / Конфликт / Буллинг</option>
-                        <option>Столовая, питание и санитария</option>
-                        <option>Кабинеты, техника и безопасность</option>
-                        <option>Отношение сотрудников или учителей</option>
-                        <option>Другое (конфиденциально)</option>
-                      </select>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
+                    <form
+                      onSubmit={handleComplaintSubmit}
+                      className="mt-4 space-y-3.5"
+                    >
                       <div>
                         <label className="block text-xs font-medium text-[#163832]">
-                          срочность
+                          по какому вопросу обращение
                         </label>
-                        <div className="mt-1.5 grid grid-cols-2 gap-1 rounded-xl bg-[#EEF7F0] p-1">
-                          {(['Обычное', 'Срочное'] as const).map((u) => (
-                            <button
-                              type="button"
-                              key={u}
-                              onClick={() => setComplaintUrgency(u)}
-                              className={`rounded-lg py-1.5 text-[11px] font-semibold transition ${
-                                complaintUrgency === u
-                                  ? 'bg-[#051F20] text-[#DAF1DE]'
-                                  : 'text-[#163832]'
-                              }`}
-                            >
-                              {u.toLowerCase()}
-                            </button>
-                          ))}
+                        <select
+                          value={complaintTopic}
+                          onChange={(e) => setComplaintTopic(e.target.value)}
+                          className="mt-1.5 w-full rounded-xl bg-[#EEF7F0] px-3.5 py-2.5 text-xs font-semibold text-[#051F20] outline-none"
+                        >
+                          <option>Учебный процесс и оценивание</option>
+                          <option>Отношения в классе / Конфликт / Буллинг</option>
+                          <option>Столовая, питание и санитария</option>
+                          <option>Кабинеты, техника и безопасность</option>
+                          <option>Отношение сотрудников или учителей</option>
+                          <option>Другое (конфиденциально)</option>
+                        </select>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-[#163832]">
+                            срочность
+                          </label>
+                          <div className="mt-1.5 grid grid-cols-2 gap-1 rounded-xl bg-[#EEF7F0] p-1">
+                            {(['Обычное', 'Срочное'] as const).map((u) => (
+                              <button
+                                type="button"
+                                key={u}
+                                onClick={() => setComplaintUrgency(u)}
+                                className={`rounded-lg py-1.5 text-[11px] font-semibold transition ${
+                                  complaintUrgency === u
+                                    ? 'bg-[#051F20] text-[#DAF1DE]'
+                                    : 'text-[#163832]'
+                                }`}
+                              >
+                                {u.toLowerCase()}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-[#163832]">
+                            где произошло (необяз.)
+                          </label>
+                          <input
+                            type="text"
+                            value={complaintLocation}
+                            onChange={(e) => setComplaintLocation(e.target.value)}
+                            placeholder="напр.: столовая / 2 этаж"
+                            className="mt-1.5 w-full rounded-xl bg-[#EEF7F0] px-3 py-2 text-xs text-[#051F20] placeholder-[#235347]/60 outline-none"
+                          />
                         </div>
                       </div>
+
                       <div>
                         <label className="block text-xs font-medium text-[#163832]">
-                          где произошло (необяз.)
+                          опишите ситуацию подробно *
                         </label>
-                        <input
-                          type="text"
-                          value={complaintLocation}
-                          onChange={(e) => setComplaintLocation(e.target.value)}
-                          placeholder="напр.: столовая / 2 этаж"
-                          className="mt-1.5 w-full rounded-xl bg-[#EEF7F0] px-3 py-2 text-xs text-[#051F20] placeholder-[#235347]/60 outline-none"
+                        <textarea
+                          rows={4}
+                          required
+                          value={complaintDetails}
+                          onChange={(e) => setComplaintDetails(e.target.value)}
+                          placeholder="Расскажите, что произошло и что нужно исправить. Личные данные указывать не нужно..."
+                          className="mt-1.5 w-full rounded-xl bg-[#EEF7F0] p-4 text-sm text-[#051F20] placeholder-[#235347]/60 outline-none focus:ring-1 focus:ring-[#051F20]"
                         />
                       </div>
-                    </div>
 
-                    <div>
-                      <label className="block text-xs font-medium text-[#163832]">
-                        опишите ситуацию подробно *
-                      </label>
-                      <textarea
-                        rows={4}
-                        required
-                        value={complaintDetails}
-                        onChange={(e) => setComplaintDetails(e.target.value)}
-                        placeholder="Расскажите, что произошло и что нужно исправить. Личные данные указывать не нужно..."
-                        className="mt-1.5 w-full rounded-xl bg-[#EEF7F0] p-4 text-sm text-[#051F20] placeholder-[#235347]/60 outline-none focus:ring-1 focus:ring-[#051F20]"
-                      />
-                    </div>
-
-                    {lastComplaintTicket && (
-                      <div className="rounded-2xl bg-[#0B2B26] p-4 text-xs leading-relaxed text-[#DAF1DE]">
-                        <div className="font-bold text-[#8EB69B]">
-                          обращение отправлено анонимно
+                      {lastComplaintTicket && (
+                        <div className="rounded-2xl bg-[#0B2B26] p-4 text-xs leading-relaxed text-[#DAF1DE]">
+                          <div className="font-bold text-[#8EB69B]">
+                            обращение отправлено анонимно
+                          </div>
+                          <div className="mt-1">
+                            Номер вашего закрытого бланка:{' '}
+                            <span className="font-mono font-bold text-white">
+                              {lastComplaintTicket}
+                            </span>
+                            . Сообщение скрыто от других учеников и передано
+                            напрямую дирекции.
+                          </div>
                         </div>
-                        <div className="mt-1">
-                          Номер вашего закрытого бланка:{' '}
-                          <span className="font-mono font-bold text-white">
-                            {lastComplaintTicket}
-                          </span>
-                          . Сообщение скрыто от других учеников и передано напрямую
-                          дирекции.
-                        </div>
-                      </div>
-                    )}
+                      )}
 
-                    <button
-                      type="submit"
-                      className="w-full rounded-full bg-[#051F20] py-3.5 text-xs font-semibold text-[#DAF1DE] transition hover:bg-[#163832] sm:text-sm"
-                    >
-                      отправить жалобу анонимно →
-                    </button>
-                  </form>
-                </div>
-              ) : (
-                <div className="mt-6">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-[#235347]">
-                    открытая доска инициатив
-                  </div>
-                  <h2 className="mt-1 text-2xl font-bold tracking-[-0.025em] text-[#051F20]">
-                    советы: как улучшить нашу школу
-                  </h2>
-                  <p className="mt-2 text-xs leading-relaxed text-[#163832]">
-                    напиши идею по учёбе, клубам, столовой или кампусу — лучшие
-                    предложения появляются на доске справа с ответом школы.
-                  </p>
-
-                  <form onSubmit={handleIdeaSubmit} className="mt-5 space-y-3.5">
-                    <div className="grid grid-cols-2 gap-3">
-                      <select
-                        value={ideaRole}
-                        onChange={(e) => setIdeaRole(e.target.value)}
-                        className="rounded-xl bg-[#EEF7F0] px-3.5 py-2.5 text-xs font-semibold text-[#051F20] outline-none"
+                      <button
+                        type="submit"
+                        className="w-full rounded-full bg-[#051F20] py-3.5 text-xs font-semibold text-[#DAF1DE] transition hover:bg-[#163832] sm:text-sm"
                       >
-                        <option>Ученик</option>
-                        <option>Учитель</option>
-                        <option>Родитель</option>
-                        <option>Анонимно</option>
+                        отправить жалобу анонимно →
+                      </button>
+                    </form>
+                  </div>
+                ) : (
+                  <div className="mt-6">
+                    <div className="text-xs font-semibold uppercase tracking-wider text-[#235347]">
+                      открытая доска инициатив
+                    </div>
+                    <h2 className="mt-1 text-2xl font-bold tracking-[-0.025em] text-[#051F20]">
+                      советы: как улучшить нашу школу
+                    </h2>
+                    <p className="mt-2 text-xs leading-relaxed text-[#163832]">
+                      напиши идею по учёбе, клубам, столовой или кампусу — лучшие
+                      предложения появляются на доске справа с ответом школы.
+                    </p>
+
+                    <form onSubmit={handleIdeaSubmit} className="mt-5 space-y-3.5">
+                      <div className="grid grid-cols-2 gap-3">
+                        <select
+                          value={ideaRole}
+                          onChange={(e) => setIdeaRole(e.target.value)}
+                          className="rounded-xl bg-[#EEF7F0] px-3.5 py-2.5 text-xs font-semibold text-[#051F20] outline-none"
+                        >
+                          <option>Ученик</option>
+                          <option>Учитель</option>
+                          <option>Родитель</option>
+                          <option>Анонимно</option>
+                        </select>
+                        <input
+                          type="text"
+                          value={ideaAuthor}
+                          onChange={(e) => setIdeaAuthor(e.target.value)}
+                          placeholder="имя и класс (необяз.)"
+                          className="rounded-xl bg-[#EEF7F0] px-3.5 py-2.5 text-xs text-[#051F20] placeholder-[#235347]/60 outline-none"
+                        />
+                      </div>
+
+                      <select
+                        value={ideaCategory}
+                        onChange={(e) =>
+                          setIdeaCategory(
+                            e.target.value as DesignSuggestion['category']
+                          )
+                        }
+                        className="w-full rounded-xl bg-[#EEF7F0] px-3.5 py-2.5 text-xs font-semibold text-[#051F20] outline-none"
+                      >
+                        <option>Учебный процесс</option>
+                        <option>Инфраструктура</option>
+                        <option>Столовая</option>
+                        <option>Внеклассная жизнь</option>
                       </select>
+
                       <input
                         type="text"
-                        value={ideaAuthor}
-                        onChange={(e) => setIdeaAuthor(e.target.value)}
-                        placeholder="имя и класс (необяз.)"
-                        className="rounded-xl bg-[#EEF7F0] px-3.5 py-2.5 text-xs text-[#051F20] placeholder-[#235347]/60 outline-none"
+                        required
+                        value={ideaTitle}
+                        onChange={(e) => setIdeaTitle(e.target.value)}
+                        placeholder="краткая суть предложения *"
+                        className="w-full rounded-xl bg-[#EEF7F0] px-4 py-3 text-sm text-[#051F20] placeholder-[#235347]/60 outline-none focus:ring-1 focus:ring-[#051F20]"
                       />
-                    </div>
 
-                    <select
-                      value={ideaCategory}
-                      onChange={(e) =>
-                        setIdeaCategory(e.target.value as DesignSuggestion['category'])
-                      }
-                      className="w-full rounded-xl bg-[#EEF7F0] px-3.5 py-2.5 text-xs font-semibold text-[#051F20] outline-none"
-                    >
-                      <option>Учебный процесс</option>
-                      <option>Инфраструктура</option>
-                      <option>Столовая</option>
-                      <option>Внеклассная жизнь</option>
-                    </select>
+                      <textarea
+                        rows={3}
+                        required
+                        value={ideaText}
+                        onChange={(e) => setIdeaText(e.target.value)}
+                        placeholder="расскажи подробнее, что именно улучшить в indigo academy west..."
+                        className="w-full rounded-xl bg-[#EEF7F0] p-4 text-sm text-[#051F20] placeholder-[#235347]/60 outline-none focus:ring-1 focus:ring-[#051F20]"
+                      />
 
-                    <input
-                      type="text"
-                      required
-                      value={ideaTitle}
-                      onChange={(e) => setIdeaTitle(e.target.value)}
-                      placeholder="краткая суть предложения *"
-                      className="w-full rounded-xl bg-[#EEF7F0] px-4 py-3 text-sm text-[#051F20] placeholder-[#235347]/60 outline-none focus:ring-1 focus:ring-[#051F20]"
-                    />
+                      {ideaSuccess && (
+                        <div className="rounded-xl bg-[#DAF1DE] px-4 py-2.5 text-xs font-semibold text-[#051F20]">
+                          спасибо! твой совет добавлен на доску инициатив.
+                        </div>
+                      )}
 
-                    <textarea
-                      rows={3}
-                      required
-                      value={ideaText}
-                      onChange={(e) => setIdeaText(e.target.value)}
-                      placeholder="расскажи подробнее, что именно улучшить в indigo academy west..."
-                      className="w-full rounded-xl bg-[#EEF7F0] p-4 text-sm text-[#051F20] placeholder-[#235347]/60 outline-none focus:ring-1 focus:ring-[#051F20]"
-                    />
-
-                    {ideaSuccess && (
-                      <div className="rounded-xl bg-[#DAF1DE] px-4 py-2.5 text-xs font-semibold text-[#051F20]">
-                        спасибо! твой совет добавлен на доску инициатив.
-                      </div>
-                    )}
-
-                    <button
-                      type="submit"
-                      className="w-full rounded-full bg-[#051F20] py-3.5 text-xs font-semibold text-[#DAF1DE] transition hover:bg-[#163832] sm:text-sm"
-                    >
-                      отправить предложение →
-                    </button>
-                  </form>
-                </div>
-              )}
-            </div>
-
-            {/* Right Deep Forest Transparency Board */}
-            <div className="rounded-[28px] bg-[#0B2B26] p-7 text-[#DAF1DE] sm:p-9 lg:col-span-7">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold tracking-[-0.02em]">
-                  <span className="text-[#8EB69B]">предложения учеников</span> и
-                  ответы школы
-                </h3>
-                <span className="rounded-full bg-[#163832] px-3 py-1 font-mono text-xs text-[#DAF1DE]">
-                  {suggestionsList.length}{' '}
-                  {suggestionsList.length === 1
-                    ? 'идея'
-                    : suggestionsList.length >= 2 && suggestionsList.length <= 4
-                    ? 'идеи'
-                    : 'идей'}
-                </span>
-              </div>
-
-              <div className="mt-6 space-y-4">
-                {suggestionsList.map((s) => (
-                  <div
-                    key={s.id}
-                    className="rounded-2xl bg-[#163832]/75 p-5 ring-1 ring-[#235347]"
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                      <span className="text-[#8EB69B]">
-                        {s.date} • {s.author} • {s.category.toLowerCase()}
-                      </span>
-                      <span
-                        className={`rounded-full px-3 py-0.5 text-[11px] font-semibold ${
-                          s.status === 'Выполнено'
-                            ? 'bg-[#8EB69B] text-[#051F20]'
-                            : s.status === 'Принято в работу'
-                            ? 'bg-[#DAF1DE] text-[#051F20]'
-                            : 'bg-[#051F20] text-[#DAF1DE]'
-                        }`}
+                      <button
+                        type="submit"
+                        className="w-full rounded-full bg-[#051F20] py-3.5 text-xs font-semibold text-[#DAF1DE] transition hover:bg-[#163832] sm:text-sm"
                       >
-                        {s.status.toLowerCase()}
-                      </span>
-                    </div>
-                    <h4 className="mt-2 text-base font-bold text-white">
-                      {s.title}
-                    </h4>
-                    <p className="mt-1 text-xs leading-relaxed text-[#DAF1DE]/80 sm:text-sm">
-                      {s.text}
-                    </p>
-                    {s.reply && (
-                      <div className="mt-3 rounded-xl bg-[#051F20]/70 px-4 py-2.5 text-xs leading-relaxed text-[#DAF1DE]">
-                        <span className="font-semibold text-[#8EB69B]">
-                          ответ администрации:{' '}
-                        </span>
-                        {s.reply}
-                      </div>
-                    )}
+                        отправить предложение →
+                      </button>
+                    </form>
                   </div>
-                ))}
+                )}
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* =====================================================================
-          BLOCK 5: СОЦСЕТИ И FOOTER (#051F20)
-      ===================================================================== */}
-      <footer id="socials" className="bg-[#051F20] pt-14 pb-12 text-[#DAF1DE]">
-        <div className="mx-auto max-w-6xl px-5">
-          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-[#8EB69B]">
-                всегда на связи • г. бишкек
-              </div>
-              <h2 className="mt-1 text-3xl font-bold tracking-[-0.03em] text-[#DAF1DE]">
-                соцсети и контакты indigo west
-              </h2>
-            </div>
-            <div className="font-mono text-xs text-[#8EB69B]">
-              +996 (555) 70-80-90 • west@indigoacademy.kg
-            </div>
-          </div>
-
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {SCHOOL_SOCIALS.map((soc) => (
-              <a
-                key={soc.id}
-                href={soc.url}
-                target="_blank"
-                rel="noreferrer"
-                className="group flex flex-col justify-between rounded-[22px] bg-[#0B2B26] p-6 ring-1 ring-[#235347]/70 transition hover:bg-[#163832] hover:ring-[#8EB69B]"
-              >
-                <div>
-                  <div className="text-[11px] font-medium text-[#8EB69B]">
-                    {soc.scheduleOrNote.toLowerCase()}
-                  </div>
-                  <h3 className="mt-1.5 text-lg font-bold text-[#DAF1DE]">
-                    {soc.name}
+              <div className="rounded-[28px] bg-[#0B2B26] p-7 text-[#DAF1DE] sm:p-9 lg:col-span-7">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold tracking-[-0.02em]">
+                    <span className="text-[#8EB69B]">предложения учеников</span> и
+                    ответы школы
                   </h3>
-                  <div className="mt-0.5 font-mono text-xs text-[#8EB69B]">
-                    {soc.handle}
-                  </div>
-                  <p className="mt-2.5 text-xs leading-relaxed text-[#DAF1DE]/75">
-                    {soc.purpose}
-                  </p>
+                  <span className="rounded-full bg-[#163832] px-3 py-1 font-mono text-xs text-[#DAF1DE]">
+                    {suggestionsList.length}{' '}
+                    {suggestionsList.length === 1
+                      ? 'идея'
+                      : suggestionsList.length >= 2 && suggestionsList.length <= 4
+                      ? 'идеи'
+                      : 'идей'}
+                  </span>
                 </div>
-                <div className="mt-5 text-xs font-semibold text-[#8EB69B] transition group-hover:text-[#DAF1DE]">
-                  открыть →
-                </div>
-              </a>
-            ))}
-          </div>
 
-          <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-[#163832] pt-6 text-xs text-[#8EB69B] sm:flex-row">
-            <div>
-              © {new Date().getFullYear()} indigo academy west (г. бишкек). все
-              права защищены.
+                <div className="mt-6 space-y-4">
+                  {suggestionsList.map((s) => (
+                    <div
+                      key={s.id}
+                      className="rounded-2xl bg-[#163832]/75 p-5 ring-1 ring-[#235347]"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <span className="text-[#8EB69B]">
+                          {s.date} • {s.author} • {s.category.toLowerCase()}
+                        </span>
+                        <span
+                          className={`rounded-full px-3 py-0.5 text-[11px] font-semibold ${
+                            s.status === 'Выполнено'
+                              ? 'bg-[#8EB69B] text-[#051F20]'
+                              : s.status === 'Принято в работу'
+                              ? 'bg-[#DAF1DE] text-[#051F20]'
+                              : 'bg-[#051F20] text-[#DAF1DE]'
+                          }`}
+                        >
+                          {s.status.toLowerCase()}
+                        </span>
+                      </div>
+                      <h4 className="mt-2 text-base font-bold text-white">
+                        {s.title}
+                      </h4>
+                      <p className="mt-1 text-xs leading-relaxed text-[#DAF1DE]/80 sm:text-sm">
+                        {s.text}
+                      </p>
+                      {s.reply && (
+                        <div className="mt-3 rounded-xl bg-[#051F20]/70 px-4 py-2.5 text-xs leading-relaxed text-[#DAF1DE]">
+                          <span className="font-semibold text-[#8EB69B]">
+                            ответ администрации:{' '}
+                          </span>
+                          {s.reply}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-            <div className="font-mono text-xs text-[#8EB69B]/80">
-              г. бишкек • западный кампус (west campus)
+          </section>
+        </div>
+      )}
+
+      {/* =====================================================================
+          PAGE 6: СОЦСЕТИ И КОНТАКТЫ (/contacts)
+      ===================================================================== */}
+      {route === 'contacts' && (
+        <div className="min-h-screen bg-[#051F20] text-[#DAF1DE]">
+          {renderNavbar(false)}
+
+          <div className="mx-auto max-w-6xl px-5 pt-8 pb-16">
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wider text-[#8EB69B]">
+                  всегда на связи • г. бишкек
+                </div>
+                <h1 className="mt-1 text-4xl font-extrabold tracking-[-0.035em] text-[#DAF1DE] sm:text-5xl">
+                  соцсети и контакты indigo west
+                </h1>
+              </div>
+              <div className="font-mono text-xs text-[#8EB69B]">
+                +996 (555) 70-80-90 • west@indigoacademy.kg
+              </div>
+            </div>
+
+            <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {SCHOOL_SOCIALS.map((soc) => (
+                <a
+                  key={soc.id}
+                  href={soc.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group flex flex-col justify-between rounded-[22px] bg-[#0B2B26] p-6 ring-1 ring-[#235347]/70 transition hover:bg-[#163832] hover:ring-[#8EB69B]"
+                >
+                  <div>
+                    <div className="text-[11px] font-medium text-[#8EB69B]">
+                      {soc.scheduleOrNote.toLowerCase()}
+                    </div>
+                    <h2 className="mt-1.5 text-lg font-bold text-[#DAF1DE]">
+                      {soc.name}
+                    </h2>
+                    <div className="mt-0.5 font-mono text-xs text-[#8EB69B]">
+                      {soc.handle}
+                    </div>
+                    <p className="mt-2.5 text-xs leading-relaxed text-[#DAF1DE]/75">
+                      {soc.purpose}
+                    </p>
+                  </div>
+                  <div className="mt-5 text-xs font-semibold text-[#8EB69B] transition group-hover:text-[#DAF1DE]">
+                    открыть →
+                  </div>
+                </a>
+              ))}
+            </div>
+
+            {/* Campus Info Card */}
+            <div className="mt-8 grid grid-cols-1 gap-6 rounded-[28px] bg-[#DAF1DE] p-7 text-[#051F20] sm:grid-cols-3 sm:p-9">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wider text-[#235347]">
+                  адрес кампуса
+                </div>
+                <div className="mt-2 text-base font-bold">
+                  Кыргызстан, г. Бишкек, Западный кампус (West Campus)
+                </div>
+              </div>
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wider text-[#235347]">
+                  приёмная и учебная часть
+                </div>
+                <div className="mt-2 font-mono text-base font-bold">
+                  +996 (555) 70-80-90
+                </div>
+                <div className="mt-0.5 font-mono text-xs text-[#163832]">
+                  west@indigoacademy.kg
+                </div>
+              </div>
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wider text-[#235347]">
+                  режим работы
+                </div>
+                <div className="mt-2 text-sm font-semibold">
+                  Пн–Пт: 08:00 – 18:00
+                  <br />
+                  Сб: 08:30 – 14:30
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </footer>
+      )}
+
+      {renderFooter()}
 
       {/* =====================================================================
-          ARTICLE READER MODAL (FOR CLICKED NEWS CARDS)
+          ARTICLE READER MODAL
       ===================================================================== */}
       {readingNews && (
         <div
