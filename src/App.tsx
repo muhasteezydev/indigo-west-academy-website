@@ -223,18 +223,18 @@ export function App() {
           className="text-left leading-none focus:outline-none"
         >
           <div
-            className={`text-2xl font-extrabold tracking-[-0.04em] ${
+            className={`text-lg font-extrabold tracking-[-0.035em] sm:text-xl ${
               onLightSky ? 'text-[#051F20]' : 'text-[#DAF1DE]'
             }`}
           >
-            indigo
+            indigo academy west
           </div>
           <div
             className={`mt-0.5 text-[10px] font-medium tracking-tight ${
               onLightSky ? 'text-[#163832]' : 'text-[#8EB69B]'
             }`}
           >
-            academy west • бишкек
+            г. бишкек
           </div>
         </button>
 
@@ -331,11 +331,11 @@ export function App() {
             onClick={() => navigate('home')}
             className="text-left focus:outline-none"
           >
-            <div className="text-2xl font-extrabold tracking-tight text-[#DAF1DE]">
-              indigo
+            <div className="text-xl font-extrabold tracking-tight text-[#DAF1DE]">
+              indigo academy west
             </div>
             <div className="text-[10px] tracking-wide text-[#8EB69B]">
-              academy west • служебный доступ
+              служебный доступ • г. бишкек
             </div>
           </button>
 
@@ -712,12 +712,12 @@ export function App() {
 
             {renderNavbar(true)}
 
-            <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-5 pt-8 pb-32 text-center sm:pt-10 sm:pb-44">
+            <div className="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-5 pt-8 pb-32 text-center sm:pt-10 sm:pb-44">
               <div className="mb-2 text-lg font-extrabold tracking-[-0.035em] text-[#051F20] sm:text-xl">
                 Learn · Grow · Serve
               </div>
-              <h1 className="text-[64px] font-extrabold leading-none tracking-[-0.045em] text-[#051F20] sm:text-[92px]">
-                indigo
+              <h1 className="text-[42px] font-extrabold leading-[1.03] tracking-[-0.04em] text-[#051F20] sm:text-[66px] lg:text-[76px]">
+                indigo academy west
               </h1>
               <p className="mt-3 max-w-md text-sm font-medium leading-relaxed text-[#0B2B26] sm:text-base">
                 школа в бишкеке, где учёба звучит как жизнь, а не скучный учебник.
