@@ -227,7 +227,7 @@ export function App() {
               onLightSky ? 'text-[#051F20]' : 'text-[#DAF1DE]'
             }`}
           >
-            indigo academy west
+            indigo west academy
           </div>
           <div
             className={`mt-0.5 text-[10px] font-medium tracking-tight ${
@@ -291,7 +291,7 @@ export function App() {
               onClick={() => navigate('home')}
               className="text-xl font-extrabold tracking-tight text-[#DAF1DE]"
             >
-              indigo academy west
+              indigo west academy
             </button>
             <div className="mt-1 text-xs text-[#8EB69B]">
               © {new Date().getFullYear()} г. бишкек • западный кампус (west campus)
@@ -332,7 +332,7 @@ export function App() {
             className="text-left focus:outline-none"
           >
             <div className="text-xl font-extrabold tracking-tight text-[#DAF1DE]">
-              indigo academy west
+              indigo west academy
             </div>
             <div className="text-[10px] tracking-wide text-[#8EB69B]">
               служебный доступ • г. бишкек
@@ -354,7 +354,7 @@ export function App() {
                 вход для администратора
               </h1>
               <p className="mt-1.5 text-sm text-[#163832]">
-                закрытая сторона сайта indigo academy west для управления новостями,
+                закрытая сторона сайта indigo west academy для управления новостями,
                 учителями, базой iqa и анонимными жалобами.
               </p>
 
@@ -418,7 +418,7 @@ export function App() {
                     администрирование портала • г. бишкек
                   </div>
                   <h1 className="mt-0.5 text-2xl font-bold text-[#DAF1DE]">
-                    управление контентом indigo academy west
+                    управление контентом indigo west academy
                   </h1>
                 </div>
 
@@ -717,7 +717,7 @@ export function App() {
                 Learn · Grow · Serve
               </div>
               <h1 className="text-[42px] font-extrabold leading-[1.03] tracking-[-0.04em] text-[#051F20] sm:text-[66px] lg:text-[76px]">
-                indigo academy west
+                indigo west academy
               </h1>
               <p className="mt-3 max-w-md text-sm font-medium leading-relaxed text-[#0B2B26] sm:text-base">
                 школа в бишкеке, где учёба звучит как жизнь, а не скучный учебник.
@@ -915,7 +915,7 @@ export function App() {
             <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
               <div>
                 <div className="text-xs font-semibold uppercase tracking-wider text-[#8EB69B]">
-                  indigo academy west • хроника школы
+                  indigo west academy • хроника школы
                 </div>
                 <h1 className="mt-1 text-4xl font-extrabold tracking-[-0.035em] text-[#DAF1DE] sm:text-5xl">
                   новости и события кампуса
@@ -1323,7 +1323,7 @@ export function App() {
 
           <div className="mx-auto max-w-6xl px-5 pt-8 pb-10">
             <div className="text-xs font-semibold uppercase tracking-wider text-[#8EB69B]">
-              обратная связь • indigo academy west
+              обратная связь • indigo west academy
             </div>
             <h1 className="mt-1 text-4xl font-extrabold tracking-[-0.035em] text-[#DAF1DE] sm:text-5xl">
               советы школе и анонимный бланк жалоб
@@ -1536,7 +1536,7 @@ export function App() {
                         required
                         value={ideaText}
                         onChange={(e) => setIdeaText(e.target.value)}
-                        placeholder="расскажи подробнее, что именно улучшить в indigo academy west..."
+                        placeholder="расскажи подробнее, что именно улучшить в indigo west academy..."
                         className="w-full rounded-xl bg-[#EEF7F0] p-4 text-sm text-[#051F20] placeholder-[#235347]/60 outline-none focus:ring-1 focus:ring-[#051F20]"
                       />
 

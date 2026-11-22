@@ -73,7 +73,7 @@ export const SCHOOL_NEWS: DesignNewsItem[] = [
     title: 'Итоги районного и городского этапов олимпиады школьников в г. Бишкек',
     summary:
       'Ученики 9–11 классов западного кампуса заняли 4 первых и 7 призовых мест по математике, информатике и физике.',
-    body: 'Поздравляем сборную школы Indigo Academy West и преподавателей кафедры точных наук с успешным выступлением на городской олимпиаде.\n\nПобедители продолжат подготовку к Республиканскому этапу по индивидуальному графику в лаборатории олимпиадного резерва (каб. 304).',
+    body: 'Поздравляем сборную школы Indigo West Academy и преподавателей кафедры точных наук с успешным выступлением на городской олимпиаде.\n\nПобедители продолжат подготовку к Республиканскому этапу по индивидуальному графику в лаборатории олимпиадного резерва (каб. 304).',
     isImportant: true,
   },
   {
@@ -101,7 +101,7 @@ export const SCHOOL_NEWS: DesignNewsItem[] = [
     category: 'Экзамены IQA',
     title: 'Расписание среза знаний IQA за II четверть (5–11 классы)',
     summary:
-      'Учебная часть Indigo Academy West публикует даты проведения планового тестирования Indigo Quiz Assessment и перечень тем.',
+      'Учебная часть Indigo West Academy публикует даты проведения планового тестирования Indigo Quiz Assessment и перечень тем.',
     body: 'Тестирование IQA за II четверть пройдёт с 25 по 28 ноября 2026 года. Ознакомиться с демонстрационными вариантами прошлых лет можно в разделе «Past Papers of IQA».',
   },
   {
@@ -328,12 +328,12 @@ export const SCHOOL_SOCIALS: DesignSocial[] = [
     handle: '@indigo.academy.west',
     url: 'https://instagram.com/indigo.academy.west',
     purpose: 'Фотоотчёты школьных олимпиад, предметных недель, награждений и мероприятий кампуса.',
-    scheduleOrNote: 'Официальная страница Indigo Academy West',
+    scheduleOrNote: 'Официальная страница Indigo West Academy',
   },
   {
     id: 3,
     name: 'YouTube — Архив видеоразборов',
-    handle: 'Indigo Academy West Bishkek',
+    handle: 'Indigo West Academy Bishkek',
     url: 'https://youtube.com',
     purpose: 'Записи разборов демонстрационных вариантов IQA по математике, физике и английскому языку.',
     scheduleOrNote: 'Учебные материалы и лекции',
@@ -349,7 +349,7 @@ export const SCHOOL_SOCIALS: DesignSocial[] = [
   {
     id: 5,
     name: '2ГИС — Адрес кампуса в Бишкеке',
-    handle: 'г. Бишкек, Indigo Academy West',
+    handle: 'г. Бишкек, Indigo West Academy',
     url: 'https://2gis.kg/bishkek',
     purpose: 'Точная схема проезда и расположение учебного корпуса на карте Бишкека.',
     scheduleOrNote: 'Западный кампус (West Campus)',

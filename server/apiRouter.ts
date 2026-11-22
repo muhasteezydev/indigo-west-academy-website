@@ -120,7 +120,7 @@ function renderPrintableIQASheet(paperCode: string, includeKey: boolean): string
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <title>${escapeHtml(paper.paper_code)} — ${escapeHtml(paper.title)} | Indigo Academy West</title>
+  <title>${escapeHtml(paper.paper_code)} — ${escapeHtml(paper.title)} | Indigo West Academy</title>
   <style>
     @page { size: A4; margin: 18mm; }
     body {
@@ -276,7 +276,7 @@ function renderPrintableIQASheet(paperCode: string, includeKey: boolean): string
   <div class="sheet">
     <div class="top-bar">
       <div>
-        <div class="school-brand">INDIGO ACADEMY WEST • БИШКЕК</div>
+        <div class="school-brand">INDIGO WEST ACADEMY • БИШКЕК</div>
         <div class="school-sub">Official Past Paper • Indigo Quiz Assessment (IQA)</div>
       </div>
       <div class="code-badge">${escapeHtml(paper.paper_code)}</div>
@@ -298,7 +298,7 @@ function renderPrintableIQASheet(paperCode: string, includeKey: boolean): string
     </div>
     ${questionsHtml}
     <div style="margin-top: 28px; padding-top: 12px; border-top: 1px solid #cbd5e1; font-size: 12px; color: #64748b; display:flex; justify-content:space-between;">
-      <span>© Indigo Academy West (г. Бишкек) — Экзаменационный архив IQA</span>
+      <span>© Indigo West Academy (г. Бишкек) — Экзаменационный архив IQA</span>
       <span>Код бланка: ${escapeHtml(paper.paper_code)}</span>
     </div>
   </div>
@@ -519,7 +519,7 @@ export async function handleApiRequest(
     const admin = extractAdminFromRequest(req);
     if (!admin) {
       sendJson(res, 401, {
-        error: 'Доступ запрещён: требуется авторизация администратора Indigo Academy West',
+        error: 'Доступ запрещён: требуется авторизация администратора Indigo West Academy',
       });
       return true;
     }
@@ -652,7 +652,7 @@ export async function handleApiRequest(
         full_name,
         subject,
         body.department || 'STEM & Олимпиады',
-        (body.role_title || 'Преподаватель Indigo Academy West').trim(),
+        (body.role_title || 'Преподаватель Indigo West Academy').trim(),
         (body.bio || '').trim(),
         JSON.stringify(Array.isArray(body.achievements) ? body.achievements : []),
         (body.education || 'Высшее педагогическое').trim(),
@@ -734,7 +734,7 @@ export async function handleApiRequest(
                 q: `Демонстрационная задача варианта ${paper_code} (${body.subject || 'Mathematics'}, ${body.grade || 9} класс)`,
                 options: ['Вариант A', 'Вариант B', 'Вариант C', 'Вариант D'],
                 answer: 'Вариант A',
-                explanation: 'Официальный разбор задачи от методической комиссии Indigo Academy West.',
+                explanation: 'Официальный разбор задачи от методической комиссии Indigo West Academy.',
               },
             ];
 
@@ -847,7 +847,7 @@ export async function handleApiRequest(
       return true;
     }
     console.error('[API Error]', err);
-    sendJson(res, 500, { error: 'Внутренняя ошибка сервера Indigo Academy West' });
+    sendJson(res, 500, { error: 'Внутренняя ошибка сервера Indigo West Academy' });
     return true;
   }
 }
