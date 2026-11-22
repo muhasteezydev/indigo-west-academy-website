@@ -136,7 +136,7 @@ function seedDatabaseIfEmpty() {
         content:
           'Академический совет Indigo West Academy опубликовал официальное расписание среза знаний IQA (Indigo Quiz Assessment) за II четверть.\n\nОсновные изменения этого семестра:\n1. Для 9–11 классов в блок Mathematics добавлены задачи формата SAT Math и республиканской олимпиады.\n2. Блок Logic & IQ теперь оценивается с повышающим коэффициентом при отборе в олимпиадную сборную школы.\n3. Все тренировочные Past Papers прошлых лет с разборами и ключами выложены в открытом доступе в разделе «IQA Past Papers» на нашем портале.',
         image_url:
-          'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=85',
+          'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fm=webp&fit=crop&w=1200&q=85',
         author_name: 'Академический департамент',
         read_time_minutes: 4,
         is_pinned: 1,
@@ -150,7 +150,7 @@ function seedDatabaseIfEmpty() {
         content:
           'Команда западного кампуса Indigo West Academy показала лучший результат за всю историю участия в городском этапе STEM-олимпиады в Бишкеке.\n\nЗолотые медали в копилку школы принесли ученики 10 и 11 классов в секциях «Алгоритмическое программирование (C++ / Python)» и «Экспериментальная физика». Поздравляем ребят и наставников кафедры STEM!',
         image_url:
-          'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=85',
+          'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fm=webp&fit=crop&w=1200&q=85',
         author_name: 'Кафедра STEM & Олимпиад',
         read_time_minutes: 3,
         is_pinned: 0,
@@ -164,7 +164,7 @@ function seedDatabaseIfEmpty() {
         content:
           'Эта идея набрала больше всего голосов в разделе «Советы как улучшить школу» в прошлом семестре — и теперь она реализована!\n\nНовая лаборатория открыта каждый будний день с 15:00 до 19:00 для всех учеников 6–11 классов, работающих над собственными стартапами, роботами и подготовкой к хакатонам.',
         image_url:
-          'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1200&q=85',
+          'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fm=webp&fit=crop&w=1200&q=85',
         author_name: 'Дирекция кампуса',
         read_time_minutes: 3,
         is_pinned: 0,
@@ -178,7 +178,7 @@ function seedDatabaseIfEmpty() {
         content:
           'В турнире приняли участие 16 команд из Indigo West Academy. Судейская коллегия отметила высокий уровень аргументации и академического английского. Лучшие спикеры представят нашу школу на центральноазиатском турнире в следующем месяце.',
         image_url:
-          'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&w=1200&q=85',
+          'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fm=webp&fit=crop&w=1200&q=85',
         author_name: 'Кафедра Языков & IELTS',
         read_time_minutes: 2,
         is_pinned: 0,
@@ -222,7 +222,7 @@ function seedDatabaseIfEmpty() {
         ],
         education: 'КРСУ / МФТИ (Прикладная математика и физика)',
         photo_url:
-          'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=800&q=80',
+          'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fm=webp&fit=crop&w=800&q=80',
         experience_years: 12,
         quote: 'Математика в Indigo — это не зубрёжка формул, а искусство видеть красивую структуру в любой сложной задаче.',
       },
@@ -239,7 +239,7 @@ function seedDatabaseIfEmpty() {
         ],
         education: 'АУЦА (AUCA) & University of Manchester (MA in TESOL)',
         photo_url:
-          'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80',
+          'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fm=webp&fit=crop&w=800&q=80',
         experience_years: 9,
         quote: 'Свободный английский открывает ученикам из Бишкека двери любого университета планеты.',
       },
@@ -256,7 +256,7 @@ function seedDatabaseIfEmpty() {
         ],
         education: 'АУЦА (Программная инженерия)',
         photo_url:
-          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fm=webp&fit=crop&w=800&q=80',
         experience_years: 7,
         quote: 'Когда ты понимаешь алгоритмы и структуры данных, ты перестаёшь быть просто пользователем технологий — ты становишься их создателем.',
       },
@@ -273,7 +273,7 @@ function seedDatabaseIfEmpty() {
         ],
         education: 'КНУ им. Ж. Баласагына (Физический факультет, магистратура)',
         photo_url:
-          'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=800&q=80',
+          'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fm=webp&fit=crop&w=800&q=80',
         experience_years: 14,
         quote: 'Физика начинается с вопроса «Почему?» и заканчивается точным расчётом и живым экспериментом.',
       },
@@ -290,7 +290,7 @@ function seedDatabaseIfEmpty() {
         ],
         education: 'КРСУ (Философия и исторические науки)',
         photo_url:
-          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fm=webp&fit=crop&w=800&q=80',
         experience_years: 8,
         quote: 'Сильный ум отличается не объёмом заученных фактов, а способностью находить связь там, где другие видят хаос.',
       },
@@ -307,7 +307,7 @@ function seedDatabaseIfEmpty() {
         ],
         education: 'БГУ им. К. Карасаева (Филология)',
         photo_url:
-          'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80',
+          'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fm=webp&fit=crop&w=800&q=80',
         experience_years: 15,
         quote: 'Родной язык и мировая литература формируют характер, эмпатию и масштаб личности.',
       },

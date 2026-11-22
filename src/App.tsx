@@ -223,7 +223,7 @@ export function App() {
           className="flex items-center gap-3 text-left leading-none focus:outline-none"
         >
           <img
-            src="/indigo-logo.png"
+            src="/indigo-logo.webp"
             alt="Indigo West Academy Logo"
             className="h-11 w-11 shrink-0 rounded-full object-cover shadow-md shadow-[#051F20]/25 ring-1 ring-[#8EB69B]/35"
           />
@@ -295,7 +295,7 @@ export function App() {
         <div className="flex flex-col items-start justify-between gap-6 border-t border-[#163832] pt-8 sm:flex-row sm:items-center">
           <div className="flex items-center gap-3">
             <img
-              src="/indigo-logo.png"
+              src="/indigo-logo.webp"
               alt="Indigo West Academy"
               className="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-[#235347]"
             />
@@ -346,7 +346,7 @@ export function App() {
             className="flex items-center gap-3 text-left focus:outline-none"
           >
             <img
-              src="/indigo-logo.png"
+              src="/indigo-logo.webp"
               alt="Indigo West Academy"
               className="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-[#8EB69B]/40"
             />
@@ -714,7 +714,7 @@ export function App() {
           <section className="relative overflow-hidden bg-[#DAF1DE]">
             <div
               className="pointer-events-none absolute inset-0 bg-cover bg-center bg-no-repeat"
-              style={{ backgroundImage: `url('/hero-indigo-west.jpg')` }}
+              style={{ backgroundImage: `url('/hero-indigo-west.webp')` }}
             />
             <div
               className="pointer-events-none absolute inset-x-0 top-0 h-[34%]"
@@ -735,7 +735,7 @@ export function App() {
 
             <div className="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-5 pt-6 pb-32 text-center sm:pt-8 sm:pb-44">
               <img
-                src="/indigo-logo-4k.png"
+                src="/indigo-logo-4k.webp"
                 alt="Indigo West Academy Crest"
                 className="mb-4 h-20 w-20 rounded-full object-cover shadow-xl shadow-[#051F20]/30 ring-2 ring-[#051F20]/15 sm:h-24 sm:w-24"
               />

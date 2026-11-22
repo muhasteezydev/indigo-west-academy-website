@@ -560,7 +560,7 @@ export async function handleApiRequest(
       const category = body.category || 'Академия';
       const image_url =
         (body.image_url || '').trim() ||
-        'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=80';
+        'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fm=webp&fit=crop&w=1200&q=80';
       const author_name = (body.author_name || admin.display_name).trim();
       const read_time_minutes = Number(body.read_time_minutes) || 3;
       const is_pinned = body.is_pinned ? 1 : 0;
@@ -657,7 +657,7 @@ export async function handleApiRequest(
         JSON.stringify(Array.isArray(body.achievements) ? body.achievements : []),
         (body.education || 'Высшее педагогическое').trim(),
         (body.photo_url || '').trim() ||
-          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fm=webp&fit=crop&w=800&q=80',
         Number(body.experience_years) || 5,
         (body.quote || 'Образование — это фундамент будущего.').trim()
       );
