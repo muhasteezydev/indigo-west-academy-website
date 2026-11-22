@@ -714,7 +714,7 @@ export function App() {
 
             <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-5 pt-8 pb-32 text-center sm:pt-10 sm:pb-44">
               <div className="mb-3 rounded-full border border-[#163832]/25 bg-[#F4FAF5]/85 px-4 py-1 text-xs font-semibold tracking-wide text-[#0B2B26] backdrop-blur-xs">
-                Our Mission: Learn · Grow · Serve
+                Learn · Grow · Serve
               </div>
               <h1 className="text-[64px] font-extrabold leading-none tracking-[-0.045em] text-[#051F20] sm:text-[92px]">
                 indigo
