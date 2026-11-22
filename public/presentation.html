@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/webp" href="/indigo-logo.webp" />
+  <title>Презентация проекта — Indigo West Academy (г. Бишкек)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      --pine-abyss: #051F20;
+      --forest-shadow: #0B2B26;
+      --evergreen: #163832;
+      --pine-emerald: #235347;
+      --sage-mint: #8EB69B;
+      --mint-mist: #DAF1DE;
+      --paper-mint: #F4FAF5;
+      --pure-white: #FFFFFF;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    *::-webkit-scrollbar {
+      display: none;
+    }
+
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background-color: #102421;
+      color: var(--pine-abyss);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Top Presentation Control Bar */
+    .controls-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      width: 100%;
+      background: rgba(5, 31, 32, 0.94);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(142, 182, 155, 0.2);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      color: var(--mint-mist);
+    }
+
+    .controls-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .controls-left img {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+    }
+
+    .controls-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #FFFFFF;
+    }
+
+    .controls-sub {
+      font-size: 12px;
+      color: #CBE7D2;
+    }
+
+    .controls-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .ctrl-btn {
+      border: 1px solid rgba(218, 241, 222, 0.35);
+      background: var(--forest-shadow);
+      color: #FFFFFF;
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      text-decoration: none;
+    }
+
+    .ctrl-btn:hover {
+      background: var(--pine-emerald);
+      border-color: var(--sage-mint);
+    }
+
+    .ctrl-btn.active,
+    .ctrl-btn.primary {
+      background: var(--mint-mist);
+      color: var(--pine-abyss);
+      border-color: var(--mint-mist);
+    }
+
+    .ctrl-btn.primary:hover {
+      background: var(--sage-mint);
+    }
+
+    /* Presentation Stage */
+    .deck-wrapper {
+      width: 100%;
+      max-width: 1360px;
+      padding: 28px 24px 64px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+    }
+
+    /* Mode: Single Slide Viewer */
+    body.mode-single .deck-wrapper {
+      height: calc(100vh - 60px);
+      justify-content: center;
+      padding: 16px 24px;
+      gap: 16px;
+    }
+
+    body.mode-single .slide-frame {
+      display: none;
+      width: min(1160px, 94vw);
+      aspect-ratio: 16 / 9;
+    }
+
+    body.mode-single .slide-frame.is-active {
+      display: block;
+    }
+
+    /* Mode: Grid Board (like the reference image!) */
+    body.mode-grid .deck-wrapper {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 1024px) {
+      body.mode-grid .deck-wrapper {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    body.mode-grid .slide-frame {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      cursor: pointer;
+      transition: transform 0.22s ease, box-shadow 0.22s ease;
+    }
+
+    body.mode-grid .slide-frame:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 24px 50px rgba(0, 0, 0, 0.45);
+    }
+
+    /* Slide Base Card (16:9 scaled cleanly via container queries / cqw) */
+    .slide-frame {
+      position: relative;
+      background: var(--paper-mint);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+      container-type: inline-size;
+    }
+
+    .slide {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      padding: 4.5cqw 5cqw;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .mono {
+      font-family: "JetBrains Mono", monospace;
+    }
+
+    .slide-num {
+      position: absolute;
+      bottom: 2.2cqw;
+      right: 3.2cqw;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 1.1cqw;
+      font-weight: 700;
+      color: var(--forest-shadow);
+    }
+
+    .eyebrow {
+      font-size: 1.1cqw;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--forest-shadow);
+    }
+
+    .slide-h1 {
+      font-size: 3.8cqw;
+      font-weight: 800;
+      line-height: 1.04;
+      letter-spacing: -0.035em;
+      color: var(--pine-abyss);
+    }
+
+    .slide-h2 {
+      font-size: 2.45cqw;
+      font-weight: 800;
+      line-height: 1.12;
+      letter-spacing: -0.03em;
+      color: var(--pine-abyss);
+    }
+
+    .watermark-letter {
+      position: absolute;
+      pointer-events: none;
+      font-weight: 800;
+      color: var(--sage-mint);
+      opacity: 0.14;
+      user-select: none;
+      line-height: 0.8;
+    }
+
+    /* =========================================================================
+       SLIDE 1: COVER (Reference Top-Left: Clean Paper + Giant Curve + Left Info)
+       ========================================================================= */
+    .s1-ribbon {
+      position: absolute;
+      right: -3cqw;
+      top: -6cqw;
+      width: 54cqw;
+      height: 68cqw;
+      pointer-events: none;
+      opacity: 0.24;
+    }
+
+    .s1-layout {
+      position: relative;
+      z-index: 2;
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      align-items: center;
+      gap: 4cqw;
+    }
+
+    .s1-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.8cqw;
+      padding: 0.85cqw 1.6cqw;
+      border-radius: 999px;
+      background: var(--mint-mist);
+      border: 1px solid rgba(11, 43, 38, 0.25);
+      font-size: 1.15cqw;
+      font-weight: 700;
+      color: var(--pine-abyss);
+      margin-bottom: 2cqw;
+    }
+
+    .s1-desc {
+      margin-top: 1.6cqw;
+      font-size: 1.38cqw;
+      line-height: 1.5;
+      color: var(--forest-shadow);
+      max-width: 44cqw;
+    }
+
+    .s1-pills {
+      margin-top: 2.6cqw;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1cqw;
+    }
+
+    .pill-dark {
+      background: var(--pine-abyss);
+      color: #FFFFFF;
+      padding: 0.85cqw 1.6cqw;
+      border-radius: 999px;
+      font-size: 1.12cqw;
+      font-weight: 600;
+    }
+
+    .pill-sage {
+      background: var(--mint-mist);
+      border: 1px solid rgba(11, 43, 38, 0.25);
+      color: var(--pine-abyss);
+      padding: 0.85cqw 1.6cqw;
+      border-radius: 999px;
+      font-size: 1.12cqw;
+      font-weight: 600;
+    }
+
+    .s1-crest-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5cqw;
+    }
+
+    .s1-crest {
+      width: 24cqw;
+      height: 24cqw;
+      border-radius: 50%;
+      box-shadow: 0 2.4cqw 5cqw rgba(5, 31, 32, 0.28);
+      border: 0.35cqw solid rgba(218, 241, 222, 0.9);
+    }
+
+    .s1-motto {
+      font-size: 1.5cqw;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--pine-abyss);
+    }
+
+    /* =========================================================================
+       SLIDE 2: ПРОБЛЕМА И ИНСАЙТ (Reference Top-Right: BIG IDEA + INSIGHT)
+       ========================================================================= */
+    .s2-grid {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 3cqw;
+      flex: 1;
+      margin-top: 2cqw;
+    }
+
+    .s2-left-card {
+      background: var(--mint-mist);
+      border-radius: 2cqw;
+      padding: 2.6cqw;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border: 1px solid rgba(35, 83, 71, 0.18);
+    }
+
+    .s2-chip {
+      display: inline-block;
+      background: var(--pine-abyss);
+      color: #FFFFFF;
+      font-size: 1.05cqw;
+      font-weight: 700;
+      padding: 0.8cqw 1.5cqw;
+      border-radius: 999px;
+      width: fit-content;
+    }
+
+    .s2-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 1.3cqw;
+      margin-top: 1.5cqw;
+    }
+
+    .s2-list li {
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 1.2cqw;
+      padding: 1.25cqw 1.6cqw;
+      font-size: 1.2cqw;
+      line-height: 1.44;
+      color: var(--pine-abyss);
+    }
+
+    .s2-list li strong {
+      color: var(--forest-shadow);
+    }
+
+    .s2-right {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.8cqw;
+    }
+
+    .s2-quote-box {
+      background: var(--pure-white);
+      border-radius: 2cqw;
+      padding: 2.4cqw;
+      border: 1px solid rgba(11, 43, 38, 0.2);
+    }
+
+    .s2-quote {
+      margin-top: 1.1cqw;
+      font-size: 1.28cqw;
+      line-height: 1.48;
+      font-weight: 600;
+      color: var(--pine-abyss);
+    }
+
+    .s2-dark-box {
+      background: var(--forest-shadow);
+      color: #FFFFFF;
+      border-radius: 2cqw;
+      padding: 2.4cqw;
+      display: flex;
+      flex-direction: column;
+      gap: 1cqw;
+    }
+
+    .s2-dark-box p {
+      font-size: 1.2cqw;
+      line-height: 1.48;
+      color: #EBF7EE;
+    }
+
+    /* =========================================================================
+       SLIDE 3: РЕШЕНИЕ — 3 СТОЛПА (Reference Row 2 Left: Top Hero + 3 Columns ↓)
+       ========================================================================= */
+    .s3-banner {
+      position: relative;
+      height: 15.5cqw;
+      border-radius: 1.8cqw;
+      overflow: hidden;
+      background: var(--pine-abyss);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 3.2cqw;
+    }
+
+    .s3-banner-bg {
+      position: absolute;
+      inset: 0;
+      background: url('/hero-indigo-west.webp') center/cover no-repeat;
+      opacity: 0.28;
+    }
+
+    .s3-banner-content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .s3-banner-title {
+      font-size: 2.8cqw;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #FFFFFF;
+    }
+
+    .s3-banner-sub {
+      font-size: 1.2cqw;
+      color: var(--mint-mist);
+      margin-top: 0.4cqw;
+    }
+
+    .s3-cols {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2cqw;
+      flex: 1;
+      margin-top: -1.4cqw;
+      position: relative;
+      z-index: 3;
+      padding-top: 0.6cqw;
+    }
+
+    .s3-col {
+      background: var(--mint-mist);
+      border-radius: 1.8cqw;
+      padding: 2.2cqw 2cqw;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      border: 1px solid rgba(11, 43, 38, 0.2);
+      color: var(--pine-abyss);
+    }
+
+    .s3-col.featured {
+      background: var(--forest-shadow);
+      color: #FFFFFF;
+    }
+
+    .s3-arrow {
+      width: 2.8cqw;
+      height: 2.8cqw;
+      border-radius: 50%;
+      background: var(--pine-abyss);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.3cqw;
+      margin-bottom: 1.3cqw;
+      border: 0.25cqw solid var(--paper-mint);
+    }
+
+    .s3-col.featured .s3-arrow {
+      background: var(--mint-mist);
+      color: var(--pine-abyss);
+    }
+
+    .s3-col h3 {
+      font-size: 1.48cqw;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.9cqw;
+    }
+
+    .s3-col p {
+      font-size: 1.18cqw;
+      line-height: 1.48;
+    }
+
+    /* =========================================================================
+       SLIDE 4: КАК РЕШИЛИ IQA PAST PAPERS (Reference Row 2 Right: 1 → 2 → 3 → 4 → 5)
+       ========================================================================= */
+    .s4-flow {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1.4cqw;
+      margin-top: 2.2cqw;
+      flex: 1;
+    }
+
+    .s4-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.2cqw;
+    }
+
+    .s4-num-row {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .s4-circle {
+      width: 3.4cqw;
+      height: 3.4cqw;
+      border-radius: 50%;
+      background: var(--pine-abyss);
+      color: #FFFFFF;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 1.35cqw;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .s4-step:not(:last-child) .s4-num-row::after {
+      content: "→";
+      position: absolute;
+      right: -1.1cqw;
+      font-size: 1.4cqw;
+      font-weight: 800;
+      color: var(--forest-shadow);
+    }
+
+    .s4-card {
+      flex: 1;
+      width: 100%;
+      background: var(--pure-white);
+      border: 1px solid rgba(11, 43, 38, 0.25);
+      border-radius: 1.5cqw;
+      padding: 1.7cqw 1.45cqw;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .s4-card.tint {
+      background: var(--mint-mist);
+    }
+
+    .s4-card h4 {
+      font-size: 1.24cqw;
+      font-weight: 800;
+      color: var(--pine-abyss);
+      margin-bottom: 0.7cqw;
+    }
+
+    .s4-card p {
+      font-size: 1.08cqw;
+      line-height: 1.44;
+      color: var(--forest-shadow);
+    }
+
+    .s4-tag {
+      margin-top: 1.2cqw;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.96cqw;
+      font-weight: 700;
+      color: var(--pine-abyss);
+      background: rgba(142, 182, 155, 0.45);
+      padding: 0.7cqw 1cqw;
+      border-radius: 0.6cqw;
+      width: fit-content;
+    }
+
+    /* =========================================================================
+       SLIDE 5: ДВУХСТОРОННИЙ САЙТ + АНОНИМНЫЙ БЛАНК (Reference Row 3 Left)
+       ========================================================================= */
+    .s5-top {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2.2cqw;
+      margin-top: 1.8cqw;
+      flex: 1;
+    }
+
+    .s5-box {
+      border-radius: 2cqw;
+      padding: 2.4cqw 2.6cqw;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .s5-box.public {
+      background: var(--pure-white);
+      border: 1.5px solid var(--forest-shadow);
+      color: var(--pine-abyss);
+    }
+
+    .s5-box.private {
+      background: var(--forest-shadow);
+      color: #FFFFFF;
+    }
+
+    .s5-box h3 {
+      font-size: 1.65cqw;
+      font-weight: 800;
+      margin-top: 0.7cqw;
+      margin-bottom: 1.2cqw;
+    }
+
+    .s5-box ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9cqw;
+      font-size: 1.18cqw;
+      line-height: 1.44;
+    }
+
+    .s5-funnel {
+      margin-top: 2cqw;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.6cqw;
+      position: relative;
+      z-index: 2;
+    }
+
+    .s5-pill {
+      background: var(--mint-mist);
+      border: 1px solid rgba(11, 43, 38, 0.35);
+      border-radius: 999px;
+      padding: 1cqw 1.4cqw;
+      text-align: center;
+      font-size: 1.1cqw;
+      font-weight: 700;
+      color: var(--pine-abyss);
+      position: relative;
+    }
+
+    .s5-pill.dark {
+      background: var(--pine-abyss);
+      color: #FFFFFF;
+      border-color: var(--pine-abyss);
+    }
+
+    /* =========================================================================
+       SLIDE 6: ИТОГ И РЕЗУЛЬТАТ (Reference Row 6/7: Dark Left Panel + Clean Cards)
+       ========================================================================= */
+    .s6-grid {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 0.85fr 1.15fr;
+      gap: 2.6cqw;
+      height: 100%;
+    }
+
+    .s6-dark-panel {
+      background: var(--pine-abyss);
+      color: #FFFFFF;
+      border-radius: 2.2cqw;
+      padding: 3cqw;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .s6-dark-panel img {
+      width: 7.5cqw;
+      height: 7.5cqw;
+      border-radius: 50%;
+    }
+
+    .s6-right-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.8cqw;
+    }
+
+    .s6-metric-card {
+      background: var(--pure-white);
+      border: 1px solid rgba(11, 43, 38, 0.25);
+      border-radius: 1.8cqw;
+      padding: 2.2cqw;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .s6-metric-card.mint {
+      background: var(--mint-mist);
+    }
+
+    .s6-big {
+      font-size: 2.8cqw;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      color: var(--pine-abyss);
+    }
+
+    .s6-label {
+      font-size: 1.28cqw;
+      font-weight: 700;
+      color: var(--pine-abyss);
+      margin-top: 0.5cqw;
+    }
+
+    .s6-sub {
+      font-size: 1.12cqw;
+      line-height: 1.46;
+      color: var(--forest-shadow);
+      margin-top: 0.6cqw;
+    }
+
+    /* Bottom Slide Navigation (only in single-slide mode) */
+    .single-nav {
+      display: none;
+      align-items: center;
+      gap: 14px;
+      color: var(--mint-mist);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    body.mode-single .single-nav {
+      display: flex;
+    }
+
+    /* Print / Export to 16:9 PDF */
+    @media print {
+      @page {
+        size: 1280px 720px;
+        margin: 0;
+      }
+      body {
+        background: white !important;
+      }
+      .controls-bar,
+      .single-nav {
+        display: none !important;
+      }
+      .deck-wrapper {
+        display: block !important;
+        padding: 0 !important;
+        max-width: none !important;
+      }
+      .slide-frame {
+        display: block !important;
+        width: 1280px !important;
+        height: 720px !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        page-break-after: always;
+        break-after: page;
+      }
+    }
+  </style>
+</head>
+<body class="mode-single">
+  <!-- Top Controls -->
+  <div class="controls-bar">
+    <div class="controls-left">
+      <img src="/indigo-logo.webp" alt="Indigo West Academy" />
+      <div>
+        <div class="controls-title">Indigo West Academy — Презентация проекта</div>
+        <div class="controls-sub">6 слайдов • Решение проблемы IQA Past Papers &amp; Цифровой портал школы</div>
+      </div>
+    </div>
+
+    <div class="controls-actions">
+      <button id="btnSingle" class="ctrl-btn active" onclick="setMode('single')">
+        Показ слайдов (16:9)
+      </button>
+      <button id="btnGrid" class="ctrl-btn" onclick="setMode('grid')">
+        Все 6 слайдов сеткой
+      </button>
+      <button class="ctrl-btn primary" onclick="window.print()">
+        Сохранить в PDF / Печать
+      </button>
+      <a class="ctrl-btn" href="/">← На сайт школы</a>
+    </div>
+  </div>
+
+  <!-- 6 Slides Deck -->
+  <div class="deck-wrapper">
+    <!-- =======================================================================
+         SLIDE 1: ТИТУЛЬНЫЙ СЛАЙД (COVER)
+         ======================================================================= -->
+    <section class="slide-frame is-active" data-slide="0">
+      <div class="slide">
+        <!-- Decorative Sweeping Curve matching reference Slide 1 -->
+        <svg class="s1-ribbon" viewBox="0 0 400 500" fill="none">
+          <path
+            d="M360 20 C 180 60, 120 190, 260 230 C 370 260, 220 390, 80 480"
+            stroke="#8EB69B"
+            stroke-width="58"
+            stroke-linecap="round"
+          />
+        </svg>
+
+        <div class="s1-layout">
+          <div>
+            <div class="s1-badge">
+              <span>г. Бишкек • Школьный цифровой проект • 2026</span>
+            </div>
+            <h1 class="slide-h1">
+              Indigo West<br />Academy Portal
+            </h1>
+            <p class="s1-desc">
+              Единая образовательная платформа нашей школы: как мы решили
+              главную проблему с архивом <strong>IQA Past Papers</strong>, объединили
+              новости, учителей и дали каждому ученику безопасный голос.
+            </p>
+            <div class="s1-pills">
+              <span class="pill-dark">Past Papers of IQA</span>
+              <span class="pill-sage">Анонимный бланк жалоб</span>
+              <span class="pill-sage">Дуал-сайт (/ и /admin)</span>
+            </div>
+          </div>
+
+          <div class="s1-crest-wrap">
+            <img
+              class="s1-crest"
+              src="/indigo-logo-4k.webp"
+              alt="Indigo Academy 4K Crest"
+            />
+            <div class="s1-motto">Learn · Grow · Serve</div>
+          </div>
+        </div>
+
+        <div class="slide-num">01 / 06</div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         SLIDE 2: ПРОБЛЕМА И ИНСАЙТ (IQA PAST PAPERS PAIN POINT)
+         ======================================================================= -->
+    <section class="slide-frame" data-slide="1">
+      <div class="slide">
+        <div class="watermark-letter" style="right: 3cqw; bottom: -2cqw; font-size: 20cqw;">
+          IQA
+        </div>
+
+        <div>
+          <div class="eyebrow">01 • Проблема, которая преследовала нашу школу</div>
+          <h2 class="slide-h2" style="margin-top: 0.6cqw;">
+            Почему подготовка к IQA превращалась в хаос?
+          </h2>
+        </div>
+
+        <div class="s2-grid">
+          <div class="s2-left-card">
+            <div>
+              <span class="s2-chip">ГЛАВНАЯ БОЛЬ УЧЕНИКОВ И УЧИТЕЛЕЙ</span>
+              <ul class="s2-list">
+                <li>
+                  <strong>Потерянные IQA Past Papers:</strong> прошлые варианты
+                  экзаменов Indigo Quiz Assessment передавались скриншотами в чатах,
+                  терялись и были недоступны новым классам.
+                </li>
+                <li>
+                  <strong>Подготовка вслепую:</strong> ученики не знали точную
+                  структуру, сложность и ключи ответов прошлых четвертей IQA.
+                </li>
+                <li>
+                  <strong>Разрозненная информация:</strong> новости школы, контакты
+                  учителей и предложения учеников были раскиданы по разным группам.
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="s2-right">
+            <div class="s2-quote-box">
+              <div class="eyebrow">ИНСАЙТ УЧЕНИКОВ</div>
+              <p class="s2-quote">
+                «Перед каждым срезом IQA весь класс ищет прошлые варианты у
+                старшеклассников. Нам нужно одно официальное место, где лежат все
+                Past Papers, новости кампуса и можно честно рассказать о проблемах
+                школы».
+              </p>
+            </div>
+
+            <div class="s2-dark-box">
+              <div style="display:flex; align-items:center; gap:1cqw;">
+                <img
+                  src="/indigo-logo.webp"
+                  alt="Logo"
+                  style="width:3.2cqw; height:3.2cqw; border-radius:50%;"
+                />
+                <span style="font-size:1.3cqw; font-weight:800; color:#8EB69B;">
+                  НАША ЦЕЛЬ
+                </span>
+              </div>
+              <p>
+                Создать современный, быстрый и серьёзный школьный сайт для
+                <strong>Indigo West Academy</strong>, который навсегда закрывает
+                проблему доступа к IQA Past Papers и делает школьную жизнь прозрачной.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="slide-num">02 / 06</div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         SLIDE 3: НАШЕ РЕШЕНИЕ — 3 ОПОРЫ ПОРТАЛА (Reference Row 2 Left)
+         ======================================================================= -->
+    <section class="slide-frame" data-slide="2">
+      <div class="slide">
+        <div class="s3-banner">
+          <div class="s3-banner-bg"></div>
+          <div class="s3-banner-content">
+            <div>
+              <div class="s3-banner-title">Indigo West Academy Portal</div>
+              <div class="s3-banner-sub">
+                Многостраничная экосистема школы в Бишкеке — всё разделено по чистым разделам
+              </div>
+            </div>
+            <img
+              src="/indigo-logo.webp"
+              alt="Indigo Logo"
+              style="width: 7cqw; height: 7cqw; border-radius: 50%; border: 2px solid #DAF1DE;"
+            />
+          </div>
+        </div>
+
+        <div class="s3-cols">
+          <div class="s3-col">
+            <div class="s3-arrow">↓</div>
+            <h3>Новости и Учителя</h3>
+            <p>
+              Отдельные страницы <strong>/news</strong> и <strong>/teachers</strong>:
+              олимпиадные победы, объявления кампуса, справочник преподавателей с
+              кафедрами, стажем и кабинетами + страница всех соцсетей школы.
+            </p>
+          </div>
+
+          <div class="s3-col featured">
+            <div class="s3-arrow">↓</div>
+            <h3>Архив Past Papers of IQA</h3>
+            <p>
+              Специальный раздел <strong>/iqa</strong>: официальная картотека
+              прошлых экзаменов IQA (6–11 классы) с фильтрами по предмету,
+              четверти, скачиванием PDF-бланка и ключами ответов.
+            </p>
+          </div>
+
+          <div class="s3-col">
+            <div class="s3-arrow">↓</div>
+            <h3>Советы и Анонимные жалобы</h3>
+            <p>
+              Раздел <strong>/feedback</strong>: открытая доска идей по улучшению
+              школы с ответами администрации и <strong>100% анонимный бланк
+              жалоб</strong> без имени и публикации на сайте.
+            </p>
+          </div>
+        </div>
+
+        <div class="slide-num">03 / 06</div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         SLIDE 4: КАК МЫ РЕШИЛИ ПРОБЛЕМУ IQA PAST PAPERS (1 → 2 → 3 → 4 → 5)
+         ======================================================================= -->
+    <section class="slide-frame" data-slide="3">
+      <div class="slide">
+        <div class="watermark-letter" style="left: 22cqw; bottom: -4cqw; font-size: 24cqw;">
+          PAST
+        </div>
+
+        <div>
+          <div class="eyebrow">03 • Системное решение проблемы IQA Past Papers</div>
+          <h2 class="slide-h2" style="margin-top: 0.6cqw;">
+            Как теперь работает подготовка к IQA в 5 шагов
+          </h2>
+        </div>
+
+        <div class="s4-flow">
+          <div class="s4-step">
+            <div class="s4-num-row"><div class="s4-circle">1</div></div>
+            <div class="s4-card">
+              <div>
+                <h4>Сбор и оцифровка</h4>
+                <p>
+                  Собрали прошлые экзамены IQA по математике, английскому, логике,
+                  информатике и физике в единую структуру.
+                </p>
+              </div>
+              <div class="s4-tag">6–11 классы</div>
+            </div>
+          </div>
+
+          <div class="s4-step">
+            <div class="s4-num-row"><div class="s4-circle">2</div></div>
+            <div class="s4-card tint">
+              <div>
+                <h4>Единые шифры</h4>
+                <p>
+                  Каждый вариант получил уникальный код, список проверяемых тем,
+                  время написания и количество заданий.
+                </p>
+              </div>
+              <div class="s4-tag">IQA-MATH-10</div>
+            </div>
+          </div>
+
+          <div class="s4-step">
+            <div class="s4-num-row"><div class="s4-circle">3</div></div>
+            <div class="s4-card">
+              <div>
+                <h4>Поиск за 3 сек</h4>
+                <p>
+                  Удобная панель из 4 фильтров: предмет, параллель, учебная
+                  четверть и формат нужного файла.
+                </p>
+              </div>
+              <div class="s4-tag">/iqa фильтр</div>
+            </div>
+          </div>
+
+          <div class="s4-step">
+            <div class="s4-num-row"><div class="s4-circle">4</div></div>
+            <div class="s4-card tint">
+              <div>
+                <h4>Бланк и Ключи</h4>
+                <p>
+                  Ученик отдельно скачивает чистый PDF-бланк для честной пробы, а
+                  затем сверяется по ключам (Answer Key).
+                </p>
+              </div>
+              <div class="s4-tag">PDF + Key</div>
+            </div>
+          </div>
+
+          <div class="s4-step">
+            <div class="s4-num-row"><div class="s4-circle">5</div></div>
+            <div class="s4-card">
+              <div>
+                <h4>Обновление базы</h4>
+                <p>
+                  После каждой четверти администрация загружает новый вариант через
+                  закрытую панель — архив растёт каждый год.
+                </p>
+              </div>
+              <div class="s4-tag">CMS /admin</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="slide-num">04 / 06</div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         SLIDE 5: ДУАЛ-САЙТ И КОНФИДЕНЦИАЛЬНОСТЬ (Reference Row 3 Left)
+         ======================================================================= -->
+    <section class="slide-frame" data-slide="4">
+      <div class="slide">
+        <div>
+          <div class="eyebrow">04 • Архитектура безопасности и приватности</div>
+          <h2 class="slide-h2" style="margin-top: 0.6cqw;">
+            Две стороны портала (Dual-Site) + Анонимный бланк
+          </h2>
+        </div>
+
+        <div class="s5-top">
+          <div class="s5-box public">
+            <div>
+              <div class="eyebrow">СТОРОНА 1 • ДЛЯ УЧЕНИКОВ И УЧИТЕЛЕЙ</div>
+              <h3>Публичный сайт (<span class="mono">/</span>)</h3>
+              <ul>
+                <li>• <strong>Никаких кнопок и следов админки</strong> на экране.</li>
+                <li>• Отдельные страницы: Новости, Учителя, IQA, Советы, Соцсети.</li>
+                <li>• <strong>100% анонимный бланк жалоб:</strong> без имени, класса и публикации на сайте — выдаётся только закрытый код тикета.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="s5-box private">
+            <div>
+              <div class="eyebrow" style="color: #8EB69B;">
+                СТОРОНА 2 • ТОЛЬКО ПО ДОСТУПУ
+              </div>
+              <h3>Скрытый кабинет (<span class="mono">/admin</span>)</h3>
+              <ul>
+                <li>• Вход только по прямой секретной ссылке и паролю.</li>
+                <li>• Публикация новостей, редактирование учителей и загрузка новых PDF-вариантов IQA.</li>
+                <li>• <strong>Закрытый раздел анонимных жалоб</strong> с пометкой срочности для быстрого реагирования дирекции.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="s5-funnel">
+          <div class="s5-pill">Ученик / Родитель</div>
+          <div class="s5-pill">Анонимный бланк (/feedback)</div>
+          <div class="s5-pill">Шифрованный тикет #ANON</div>
+          <div class="s5-pill dark">Закрытый разбор (/admin)</div>
+        </div>
+
+        <div class="slide-num">05 / 06</div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         SLIDE 6: ИТОГИ И ЦЕННОСТЬ ДЛЯ ШКОЛЫ (Reference Row 6/7)
+         ======================================================================= -->
+    <section class="slide-frame" data-slide="5">
+      <div class="slide">
+        <div class="s6-grid">
+          <div class="s6-dark-panel">
+            <div>
+              <img src="/indigo-logo-4k.webp" alt="Indigo Academy Logo" />
+              <div
+                class="eyebrow"
+                style="color: #8EB69B; margin-top: 2cqw;"
+              >
+                INDIGO WEST ACADEMY • БИШКЕК
+              </div>
+              <h2
+                style="font-size: 2.5cqw; font-weight: 800; line-height: 1.1; margin-top: 0.8cqw; color: #DAF1DE;"
+              >
+                Learn.<br />Grow.<br />Serve.
+              </h2>
+              <p
+                style="margin-top: 1.4cqw; font-size: 1.15cqw; line-height: 1.5; color: rgba(218,241,222,0.82);"
+              >
+                Мы превратили разрозненные чаты и потерянные тесты в единый
+                современный цифровой дом для всей нашей школы.
+              </p>
+            </div>
+
+            <div
+              style="border-top: 1px solid #235347; padding-top: 1.3cqw; font-size: 1cqw; color: #8EB69B;"
+            >
+              <div class="mono" style="color: #DAF1DE; font-weight: 700;">
+                github.com/muhasteezydev/indigo-west-academy-website
+              </div>
+              <div style="margin-top: 0.3cqw;">
+                Спасибо за внимание! Готовы ответить на вопросы.
+              </div>
+            </div>
+          </div>
+
+          <div class="s6-right-cards">
+            <div class="s6-metric-card mint">
+              <div>
+                <div class="s6-big">100%</div>
+                <div class="s6-label">Порядок в IQA Past Papers</div>
+                <p class="s6-sub">
+                  Все прошлые варианты, темы и ключи собраны в едином фильтре —
+                  никаких потерянных файлов в чатах.
+                </p>
+              </div>
+            </div>
+
+            <div class="s6-metric-card">
+              <div>
+                <div class="s6-big">−89%</div>
+                <div class="s6-label">Вес графики (WebP + 4K)</div>
+                <p class="s6-sub">
+                  Все изображения и 4K-герб школы оптимизированы в WebP — сайт
+                  мгновенно открывается даже с мобильного интернета.
+                </p>
+              </div>
+            </div>
+
+            <div class="s6-metric-card">
+              <div>
+                <div class="s6-big">6 стр.</div>
+                <div class="s6-label">Многостраничная структура</div>
+                <p class="s6-sub">
+                  Главная, Новости, Учителя, Past Papers IQA, Советы &amp;
+                  Анонимные жалобы, Соцсети + скрытый /admin.
+                </p>
+              </div>
+            </div>
+
+            <div class="s6-metric-card mint">
+              <div>
+                <div class="s6-big">0 имён</div>
+                <div class="s6-label">Честная обратная связь</div>
+                <p class="s6-sub">
+                  Анонимный бланк жалоб защищает учеников и помогает руководству
+                  быстро решать реальные проблемы кампуса.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="slide-num">06 / 06</div>
+      </div>
+    </section>
+
+    <!-- Bottom Navigation in Single-Slide Mode -->
+    <div class="single-nav">
+      <button class="ctrl-btn" onclick="prevSlide()">← Предыдущий слайд</button>
+      <span id="slideCounter" class="mono">01 / 06</span>
+      <button class="ctrl-btn" onclick="nextSlide()">Следующий слайд →</button>
+    </div>
+  </div>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll('.slide-frame'));
+    const counter = document.getElementById('slideCounter');
+    const btnSingle = document.getElementById('btnSingle');
+    const btnGrid = document.getElementById('btnGrid');
+    let current = 0;
+
+    function updateSlide(index) {
+      current = (index + slides.length) % slides.length;
+      slides.forEach((el, i) => el.classList.toggle('is-active', i === current));
+      counter.textContent =
+        String(current + 1).padStart(2, '0') +
+        ' / ' +
+        String(slides.length).padStart(2, '0');
+    }
+
+    function nextSlide() {
+      updateSlide(current + 1);
+    }
+
+    function prevSlide() {
+      updateSlide(current - 1);
+    }
+
+    function setMode(mode) {
+      document.body.classList.remove('mode-single', 'mode-grid');
+      document.body.classList.add('mode-' + mode);
+      btnSingle.classList.toggle('active', mode === 'single');
+      btnGrid.classList.toggle('active', mode === 'grid');
+    }
+
+    // Clicking any slide in grid mode opens it in presentation view
+    slides.forEach((el, idx) => {
+      el.addEventListener('click', () => {
+        if (document.body.classList.contains('mode-grid')) {
+          updateSlide(idx);
+          setMode('single');
+        }
+      });
+    });
+
+    // Keyboard navigation
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prevSlide();
+      }
+    });
+  </script>
+</body>
+</html>
